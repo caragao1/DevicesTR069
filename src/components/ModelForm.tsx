@@ -1,13 +1,17 @@
+import { ManufacturerSelect } from "@/components/ManufacturerSelect";
+
 const inputClass =
   "rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900";
 
 export function ModelForm({
   action,
+  manufacturers,
   defaultValues,
   error,
   submitLabel,
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  manufacturers: string[];
   defaultValues?: {
     manufacturer?: string;
     modelName?: string;
@@ -27,12 +31,9 @@ export function ModelForm({
         <span className="font-medium text-stone-700 dark:text-stone-200">
           Fabricante *
         </span>
-        <input
-          name="manufacturer"
-          required
+        <ManufacturerSelect
+          manufacturers={manufacturers}
           defaultValue={defaultValues?.manufacturer}
-          placeholder="Ex: Huawei"
-          className={inputClass}
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">

@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { ModelForm } from "@/components/ModelForm";
 import { createModelAction } from "@/lib/actions/models";
 
@@ -6,6 +7,13 @@ export default async function NewModelPage({
 }: PageProps<"/models/new">) {
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : undefined;
+  const fabricante = typeof sp.fabricante === "string" ? sp.fabricante : undefined;
+
+  const manufacturers = await prisma.deviceModel.findMany({
+    select: { manufacturer: true },
+    distinct: ["manufacturer"],
+    orderBy: { manufacturer: "asc" },
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,6 +28,8 @@ export default async function NewModelPage({
       </div>
       <ModelForm
         action={createModelAction}
+        manufacturers={manufacturers.map((m) => m.manufacturer)}
+        defaultValues={fabricante ? { manufacturer: fabricante } : undefined}
         error={error}
         submitLabel="Criar modelo"
       />
