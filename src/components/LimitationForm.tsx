@@ -8,7 +8,7 @@ import {
 } from "@/lib/constants";
 
 const inputClass =
-  "rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900";
 
 export function LimitationForm({
   action,
@@ -39,7 +39,7 @@ export function LimitationForm({
       )}
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Título *
         </span>
         <input
@@ -53,7 +53,7 @@ export function LimitationForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-stone-700 dark:text-stone-200">
             Categoria *
           </span>
           <select
@@ -74,7 +74,7 @@ export function LimitationForm({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-stone-700 dark:text-stone-200">
             Severidade *
           </span>
           <select
@@ -95,7 +95,7 @@ export function LimitationForm({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-stone-700 dark:text-stone-200">
             Status
           </span>
           <select
@@ -113,7 +113,7 @@ export function LimitationForm({
       </div>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Descrição *
         </span>
         <textarea
@@ -127,7 +127,7 @@ export function LimitationForm({
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Firmware(s) afetado(s)
         </span>
         <input
@@ -139,7 +139,7 @@ export function LimitationForm({
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Workaround / contorno
         </span>
         <textarea
@@ -152,7 +152,7 @@ export function LimitationForm({
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Link de referência
         </span>
         <input
@@ -166,7 +166,7 @@ export function LimitationForm({
 
       <button
         type="submit"
-        className="self-start rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        className="self-start rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
       >
         {submitLabel}
       </button>

@@ -19,10 +19,10 @@ export default async function EditModelPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
           Editar modelo
         </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-stone-500 dark:text-slate-400">
           {model.manufacturer} {model.modelName}
         </p>
       </div>
