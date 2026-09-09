@@ -19,26 +19,24 @@ workarounds e o status de cada uma.
 ## Stack técnica
 
 - [Next.js 16](https://nextjs.org/) (App Router, Server Actions, TypeScript)
-- [Prisma](https://www.prisma.io/) + SQLite (arquivo local, sem necessidade
-  de infraestrutura de banco de dados separada)
+- [Prisma](https://www.prisma.io/) + PostgreSQL
 - [Tailwind CSS 4](https://tailwindcss.com/)
 - Autenticação própria e simples: sessão em cookie `httpOnly` assinada com
   JWT ([jose](https://github.com/panva/jose)) e senha com hash
   ([bcryptjs](https://github.com/dcodeIO/bcrypt.js))
 
-Sem dependências externas de infraestrutura: o banco de dados é um arquivo
-SQLite versionado localmente (fora do git), então basta `npm install` e
-rodar as migrações para funcionar.
-
 ## Como rodar localmente
+
+Requer um Postgres acessível (local via Docker, ou um banco gratuito no
+[Neon](https://neon.tech)/[Vercel Postgres](https://vercel.com/storage/postgres)).
 
 ```bash
 npm install
 
 cp .env.example .env
-# edite o .env: defina AUTH_SECRET, ADMIN_EMAIL e ADMIN_PASSWORD
+# edite o .env: DATABASE_URL, DIRECT_URL, AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 
-npm run db:migrate   # cria o banco SQLite, as tabelas e roda o seed
+npm run db:migrate   # cria as tabelas e roda o seed
 npm run dev           # http://localhost:3000
 ```
 
@@ -54,12 +52,46 @@ Use o e-mail/senha definidos em `ADMIN_EMAIL`/`ADMIN_PASSWORD` no `.env`.
 
 Veja `.env.example`:
 
-| Variável         | Descrição                                                           |
-| ---------------- | --------------------------------------------------------------------- |
-| `DATABASE_URL`   | Caminho do arquivo SQLite (padrão: `file:./dev.db`)                   |
-| `AUTH_SECRET`    | Segredo usado para assinar o cookie de sessão. Troque em produção.    |
-| `ADMIN_EMAIL`    | E-mail do usuário administrador criado pelo seed.                     |
-| `ADMIN_PASSWORD` | Senha do usuário administrador criado pelo seed.                      |
+| Variável         | Descrição                                                              |
+| ---------------- | -------------------------------------------------------------------------- |
+| `DATABASE_URL`   | Connection string do Postgres (conexão pooled, usada em runtime).          |
+| `DIRECT_URL`     | Connection string direta do Postgres (sem pooler), usada só pelas migrations. |
+| `AUTH_SECRET`    | Segredo usado para assinar o cookie de sessão. Troque em produção.         |
+| `ADMIN_EMAIL`    | E-mail do usuário administrador criado pelo seed.                          |
+| `ADMIN_PASSWORD` | Senha do usuário administrador criado pelo seed.                           |
+
+## Deploy no Vercel
+
+Não precisa de CLI — dá pra fazer tudo pelo dashboard:
+
+1. **Importe o repositório**: em [vercel.com/new](https://vercel.com/new),
+   selecione este repositório GitHub. O Vercel detecta o Next.js
+   automaticamente.
+2. **Crie o banco Postgres**: na aba **Storage** do projeto, clique em
+   *Create Database* → *Postgres* (roda no Neon). O Vercel já injeta as
+   variáveis de conexão certas no projeto automaticamente.
+   - Se as variáveis vierem com outro nome (ex: `POSTGRES_PRISMA_URL` /
+     `POSTGRES_URL_NON_POOLING`), copie os valores para `DATABASE_URL` e
+     `DIRECT_URL` em **Settings → Environment Variables** (ou renomeie lá
+     mesmo).
+3. **Defina as demais variáveis de ambiente** em
+   **Settings → Environment Variables**: `AUTH_SECRET` (gere um valor
+   aleatório longo, ex: `openssl rand -base64 32`), `ADMIN_EMAIL` e
+   `ADMIN_PASSWORD`.
+4. **Deploy**: o build (`npm run build`) já roda `prisma migrate deploy`
+   antes do `next build`, então as tabelas são criadas automaticamente no
+   primeiro deploy — não precisa rodar migração manualmente.
+5. **Rode o seed uma vez** (cria o usuário admin), apontando para o banco
+   de produção — pegue a connection string em **Storage → seu banco →
+   `.env.local`** no dashboard do Vercel:
+   ```bash
+   DATABASE_URL="<connection-string-de-produção>" \
+   ADMIN_EMAIL="..." ADMIN_PASSWORD="..." \
+   npx tsx prisma/seed.ts
+   ```
+
+A partir do segundo deploy em diante, novas migrations (se você alterar o
+schema) são aplicadas automaticamente a cada build.
 
 ## Estrutura do projeto
 

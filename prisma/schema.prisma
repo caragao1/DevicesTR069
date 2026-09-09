@@ -3,8 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Conexão direta (sem pooler), usada apenas por `prisma migrate`.
+  // Se o seu Postgres não usa pooler (pgbouncer), aponte para a mesma URL de DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -30,7 +33,7 @@ model DeviceModel {
 
 // severity: BAIXA | MEDIA | ALTA | CRITICA
 // status: CONHECIDO | EM_ANALISE | RESOLVIDO
-// SQLite has no native enum support in Prisma, so these are validated in app code (see src/lib/constants.ts).
+// Mantidos como String (em vez de enum do Postgres) e validados em app code (ver src/lib/constants.ts).
 model Limitation {
   id               String   @id @default(cuid())
   deviceModelId    String
