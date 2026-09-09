@@ -1,4 +1,5 @@
 import { loginAction } from "@/lib/actions/auth";
+import { BrandIcon } from "@/components/icons";
 
 export default async function LoginPage({
   searchParams,
@@ -8,17 +9,25 @@ export default async function LoginPage({
   const next = typeof sp.next === "string" ? sp.next : "/";
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 pt-8">
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Entrar
-        </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Acesso interno da equipe IXC ACS.
-        </p>
+    <div className="mx-auto flex max-w-sm flex-col gap-8 pt-12">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900">
+          <BrandIcon className="h-5 w-5 text-teal-400" />
+        </div>
+        <div>
+          <h1 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
+            Entrar
+          </h1>
+          <p className="mt-1 text-sm text-stone-500 dark:text-slate-400">
+            Acesso interno da equipe IXC ACS.
+          </p>
+        </div>
       </div>
 
-      <form action={loginAction} className="flex flex-col gap-4">
+      <form
+        action={loginAction}
+        className="flex flex-col gap-4 rounded-xl border border-stone-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900"
+      >
         {error && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
             {error}
@@ -26,7 +35,7 @@ export default async function LoginPage({
         )}
         <input type="hidden" name="next" value={next} />
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-stone-700 dark:text-stone-200">
             E-mail
           </span>
           <input
@@ -35,23 +44,23 @@ export default async function LoginPage({
             required
             autoFocus
             placeholder="voce@ixcacs.local"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900"
+            className="rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-stone-700 dark:text-stone-200">
             Senha
           </span>
           <input
             type="password"
             name="password"
             required
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900"
+            className="rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
           />
         </label>
         <button
           type="submit"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          className="mt-1 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
         >
           Entrar
         </button>

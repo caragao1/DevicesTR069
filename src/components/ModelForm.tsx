@@ -1,5 +1,5 @@
 const inputClass =
-  "rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900";
 
 export function ModelForm({
   action,
@@ -24,7 +24,7 @@ export function ModelForm({
         </p>
       )}
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Fabricante *
         </span>
         <input
@@ -36,7 +36,7 @@ export function ModelForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Modelo *
         </span>
         <input
@@ -48,7 +48,7 @@ export function ModelForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+        <span className="font-medium text-stone-700 dark:text-stone-200">
           Observações
         </span>
         <textarea
@@ -61,7 +61,7 @@ export function ModelForm({
       </label>
       <button
         type="submit"
-        className="self-start rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        className="self-start rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
       >
         {submitLabel}
       </button>

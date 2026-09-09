@@ -6,6 +6,7 @@ import { deleteModelAction } from "@/lib/actions/models";
 import { deleteLimitationAction } from "@/lib/actions/limitations";
 import { SeverityBadge, StatusBadge, CategoryBadge } from "@/components/Badges";
 import { ConfirmDeleteForm } from "@/components/ConfirmDeleteForm";
+import { ArrowLeftIcon, ExternalLinkIcon, PlusIcon } from "@/components/icons";
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -23,7 +24,7 @@ import {
 } from "@/lib/constants";
 
 const selectClass =
-  "rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-sm text-stone-700 dark:border-slate-800 dark:bg-slate-900 dark:text-stone-200";
 
 export default async function ModelPage({
   params,
@@ -68,17 +69,18 @@ export default async function ModelPage({
       <div>
         <Link
           href="/"
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
         >
-          ← Voltar para a lista
+          <ArrowLeftIcon className="h-3.5 w-3.5" />
+          Voltar para a lista
         </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+            <h1 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
               {model.manufacturer} {model.modelName}
             </h1>
             {model.notes && (
-              <p className="mt-1 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="mt-1.5 max-w-2xl text-sm text-stone-600 dark:text-slate-400">
                 {model.notes}
               </p>
             )}
@@ -87,7 +89,7 @@ export default async function ModelPage({
             <div className="flex gap-2">
               <Link
                 href={`/models/${model.id}/edit`}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                className="rounded-md border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:border-slate-800 dark:text-stone-200 dark:hover:bg-slate-900"
               >
                 Editar modelo
               </Link>
@@ -102,15 +104,16 @@ export default async function ModelPage({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
           Limitações conhecidas ({limitations.length})
         </h2>
         {session && (
           <Link
             href={`/models/${model.id}/limitations/new`}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700"
+            className="flex items-center gap-1.5 rounded-md bg-teal-700 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
           >
-            + Nova limitação
+            <PlusIcon className="h-3.5 w-3.5" />
+            Nova limitação
           </Link>
         )}
       </div>
@@ -157,14 +160,14 @@ export default async function ModelPage({
         </select>
         <button
           type="submit"
-          className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-stone-100 dark:text-stone-900"
         >
           Filtrar
         </button>
         {hasFilter && (
           <Link
             href={`/models/${model.id}`}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium dark:border-zinc-700"
+            className="rounded-md border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 dark:border-slate-800 dark:text-stone-200"
           >
             Limpar filtros
           </Link>
@@ -172,7 +175,7 @@ export default async function ModelPage({
       </form>
 
       {limitations.length === 0 ? (
-        <p className="rounded-md border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+        <p className="rounded-lg border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500 dark:border-slate-700 dark:text-slate-400">
           {hasFilter
             ? "Nenhuma limitação encontrada para esse filtro."
             : "Nenhuma limitação registrada para este modelo ainda."}
@@ -188,7 +191,7 @@ export default async function ModelPage({
             return (
               <li
                 key={limitation.id}
-                className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                className="rounded-xl border border-stone-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -200,7 +203,7 @@ export default async function ModelPage({
                     <div className="flex items-center gap-3 text-xs">
                       <Link
                         href={`/limitations/${limitation.id}/edit`}
-                        className="text-blue-600 hover:underline dark:text-blue-400"
+                        className="font-medium text-teal-700 hover:underline dark:text-teal-400"
                       >
                         Editar
                       </Link>
@@ -213,21 +216,25 @@ export default async function ModelPage({
                     </div>
                   )}
                 </div>
-                <h3 className="mt-2 font-semibold text-zinc-900 dark:text-zinc-100">
+                <h3 className="mt-3 font-semibold text-stone-900 dark:text-stone-100">
                   {limitation.title}
                 </h3>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+                <p className="mt-1.5 whitespace-pre-wrap text-sm text-stone-700 dark:text-slate-300">
                   {limitation.description}
                 </p>
                 {limitation.affectedFirmware && (
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    <span className="font-medium">Firmware afetado:</span>{" "}
+                  <p className="mt-3 text-xs text-stone-500 dark:text-slate-400">
+                    <span className="font-medium text-stone-600 dark:text-slate-300">
+                      Firmware afetado:
+                    </span>{" "}
                     {limitation.affectedFirmware}
                   </p>
                 )}
                 {limitation.workaround && (
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-                    <span className="font-medium">Workaround:</span>{" "}
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-stone-700 dark:text-slate-300">
+                    <span className="font-medium text-stone-900 dark:text-stone-100">
+                      Workaround:
+                    </span>{" "}
                     {limitation.workaround}
                   </p>
                 )}
@@ -236,9 +243,10 @@ export default async function ModelPage({
                     href={limitation.referenceLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-block text-xs text-blue-600 hover:underline dark:text-blue-400"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 hover:underline dark:text-teal-400"
                   >
-                    Ver referência ↗
+                    Ver referência
+                    <ExternalLinkIcon className="h-3 w-3" />
                   </a>
                 )}
               </li>
