@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SeverityBadge } from "@/components/Badges";
-import { CpeIcon, PlusIcon, SearchIcon, ChevronRightIcon } from "@/components/icons";
+import { ManufacturerIcon } from "@/components/ManufacturerIcon";
+import { PlusIcon, SearchIcon } from "@/components/icons";
 import { SEVERITY_ORDER, type Severity } from "@/lib/constants";
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
@@ -92,7 +93,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             : "Nenhum modelo cadastrado ainda."}
         </p>
       ) : (
-        <ul className="flex flex-col gap-2.5">
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {models.map((model) => {
             const worst = model.limitations.reduce<Severity | null>(
               (acc, l) => {
@@ -102,28 +103,33 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               },
               null
             );
-            const count = model.limitations.length;
             return (
               <li key={model.id}>
                 <Link
                   href={`/models/${model.id}`}
-                  className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white px-4.5 py-4 transition hover:border-teal-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-900"
+                  className="flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl border border-stone-200 bg-white p-4 text-center transition hover:border-teal-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-900"
                 >
-                  <div className="flex h-10.5 w-10.5 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-slate-800">
-                    <CpeIcon className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-stone-100 dark:bg-slate-800">
+                    <ManufacturerIcon
+                      manufacturer={model.manufacturer}
+                      className="h-6 w-6"
+                    />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-stone-900 dark:text-stone-100">
-                      {model.manufacturer} {model.modelName}
+                  <div>
+                    <p className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                      {model.manufacturer}
                     </p>
-                    <p className="mt-0.5 text-xs text-stone-500 dark:text-slate-400">
-                      {count === 0
-                        ? "Nenhuma limitação registrada"
-                        : `${count} limitaç${count === 1 ? "ão" : "ões"} registrada${count === 1 ? "" : "s"}`}
+                    <p className="text-xs text-stone-500 dark:text-slate-400">
+                      {model.modelName}
                     </p>
                   </div>
-                  {worst && <SeverityBadge severity={worst} />}
-                  <ChevronRightIcon className="h-4 w-4 shrink-0 text-stone-300 dark:text-slate-600" />
+                  {worst ? (
+                    <SeverityBadge severity={worst} />
+                  ) : (
+                    <span className="text-[11px] text-stone-400 dark:text-slate-500">
+                      Sem limitações
+                    </span>
+                  )}
                 </Link>
               </li>
             );

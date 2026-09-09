@@ -4,6 +4,7 @@ import type { SessionPayload } from "@/lib/session";
 import { logoutAction } from "@/lib/actions/auth";
 import { BrandIcon, CpeIcon, OltIcon } from "@/components/icons";
 import { ManufacturerLink } from "@/components/ManufacturerLink";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export async function Sidebar({ session }: { session: SessionPayload }) {
   const manufacturers = await prisma.deviceModel.findMany({
@@ -74,6 +75,7 @@ export async function Sidebar({ session }: { session: SessionPayload }) {
         <span className="min-w-0 flex-1 truncate text-[13px] text-stone-300">
           {session.name}
         </span>
+        <ThemeToggle />
         <form action={logoutAction}>
           <button
             type="submit"
