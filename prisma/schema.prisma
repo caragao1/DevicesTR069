@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+model DeviceModel {
+  id           String   @id @default(cuid())
+  manufacturer String
+  modelName    String
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  limitations Limitation[]
+
+  @@unique([manufacturer, modelName])
+}
+
+// severity: BAIXA | MEDIA | ALTA | CRITICA
+// status: CONHECIDO | EM_ANALISE | RESOLVIDO
+// SQLite has no native enum support in Prisma, so these are validated in app code (see src/lib/constants.ts).
+model Limitation {
+  id               String   @id @default(cuid())
+  deviceModelId    String
+  deviceModel      DeviceModel @relation(fields: [deviceModelId], references: [id], onDelete: Cascade)
+  title            String
+  category         String
+  severity         String
+  description      String
+  affectedFirmware String?
+  workaround       String?
+  status           String   @default("CONHECIDO")
+  referenceLink    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([deviceModelId])
+}
