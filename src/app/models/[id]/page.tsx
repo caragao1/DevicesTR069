@@ -68,11 +68,11 @@ export default async function ModelPage({
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          href="/"
+          href={`/fabricantes/${encodeURIComponent(model.manufacturer)}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
         >
           <ArrowLeftIcon className="h-3.5 w-3.5" />
-          Voltar para a lista
+          Voltar para {model.manufacturer}
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div>

@@ -14,6 +14,12 @@ export default async function EditModelPage({
   const model = await prisma.deviceModel.findUnique({ where: { id } });
   if (!model) notFound();
 
+  const manufacturers = await prisma.deviceModel.findMany({
+    select: { manufacturer: true },
+    distinct: ["manufacturer"],
+    orderBy: { manufacturer: "asc" },
+  });
+
   const updateModelWithId = updateModelAction.bind(null, model.id);
 
   return (
@@ -28,6 +34,7 @@ export default async function EditModelPage({
       </div>
       <ModelForm
         action={updateModelWithId}
+        manufacturers={manufacturers.map((m) => m.manufacturer)}
         defaultValues={model}
         error={error}
         submitLabel="Salvar alterações"
