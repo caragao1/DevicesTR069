@@ -33,10 +33,14 @@ function validateLimitation(data: ReturnType<typeof parseLimitationForm>) {
     return "Status inválido.";
   }
   if (data.referenceLink) {
+    let url: URL;
     try {
-      new URL(data.referenceLink);
+      url = new URL(data.referenceLink);
     } catch {
       return "Link de referência inválido (informe uma URL completa).";
+    }
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return "Link de referência deve começar com http:// ou https://.";
     }
   }
   return null;
