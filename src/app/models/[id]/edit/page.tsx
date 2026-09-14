@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import { ModelForm } from "@/components/ModelForm";
 import { updateModelAction } from "@/lib/actions/models";
 
@@ -7,6 +8,7 @@ export default async function EditModelPage({
   params,
   searchParams,
 }: PageProps<"/models/[id]/edit">) {
+  await requireSession();
   const { id } = await params;
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : undefined;

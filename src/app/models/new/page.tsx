@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import { ModelForm } from "@/components/ModelForm";
 import { createModelAction } from "@/lib/actions/models";
 
 export default async function NewModelPage({
   searchParams,
 }: PageProps<"/models/new">) {
+  await requireSession();
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : undefined;
   const fabricante = typeof sp.fabricante === "string" ? sp.fabricante : undefined;

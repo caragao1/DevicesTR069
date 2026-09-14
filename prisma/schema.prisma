@@ -55,3 +55,28 @@ model Limitation {
 
   @@index([deviceModelId])
 }
+
+// Capacidades de um equipamento (hardware + firmware), obtidas via a API do
+// ACS do cliente no momento do registro. Um modelo pode ter várias
+// combinações de hardware/firmware, cada uma com seu próprio conjunto de
+// capacidades suportadas — por isso a chave é composta pelos quatro campos.
+model EquipmentCapability {
+  id              String    @id @default(cuid())
+  manufacturer    String
+  modelName       String
+  productClass    String?
+  hardware        String
+  firmwareVersion String
+  releaseDate     DateTime?
+  packageVersion  String?
+  datamodel       String?
+  hasPackage      Boolean?
+  serialNumber    String?
+  // Estrutura da API do ACS, aninhada e específica de cada fabricante/modelo
+  // — guardada como JSON e renderizada de forma genérica (ver CapabilityTree).
+  capabilities    Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([manufacturer, modelName, hardware, firmwareVersion])
+}

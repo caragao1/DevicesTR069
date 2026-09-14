@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import { LimitationForm } from "@/components/LimitationForm";
 import { updateLimitationAction } from "@/lib/actions/limitations";
 import { ArrowLeftIcon } from "@/components/icons";
@@ -9,6 +10,7 @@ export default async function EditLimitationPage({
   params,
   searchParams,
 }: PageProps<"/limitations/[id]/edit">) {
+  await requireSession();
   const { id } = await params;
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : undefined;

@@ -4,10 +4,37 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth-token";
 
 const PUBLIC_PATHS = ["/login"];
 
+// Consulta (leitura) é pública: qualquer pessoa pode navegar por
+// fabricantes e modelos sem login. Cadastrar/editar/excluir continua
+// exigindo sessão (e Server Actions revalidam isso de forma independente,
+// como defesa em profundidade).
+const MODEL_DETAIL_PATTERN = /^\/models\/[^/]+$/;
+
+function isPublicReadPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  if (pathname.startsWith("/fabricantes/")) return true;
+  if (pathname !== "/models/new" && MODEL_DETAIL_PATTERN.test(pathname)) {
+    return true;
+  }
+  if (pathname === "/capacidades") return true;
+  if (pathname.startsWith("/capacidades/registro/")) return true;
+  if (
+    pathname.startsWith("/capacidades/") &&
+    pathname !== "/capacidades/registrar" &&
+    !pathname.startsWith("/capacidades/registrar/")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+  if (
+    PUBLIC_PATHS.some((path) => pathname.startsWith(path)) ||
+    isPublicReadPath(pathname)
+  ) {
     return NextResponse.next();
   }
 
