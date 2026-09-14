@@ -20,6 +20,8 @@ model User {
   failedAttempts Int       @default(0)
   lockedUntil    DateTime?
   createdAt      DateTime  @default(now())
+
+  acsSession AcsSession?
 }
 
 model DeviceModel {
@@ -73,10 +75,25 @@ model EquipmentCapability {
   hasPackage      Boolean?
   serialNumber    String?
   // Estrutura da API do ACS, aninhada e específica de cada fabricante/modelo
-  // — guardada como JSON e renderizada de forma genérica (ver CapabilityTree).
+  // — guardada como JSON e renderizada de forma genérica (ver CapabilityGroupsPanel).
   capabilities    Json
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@unique([manufacturer, modelName, hardware, firmwareVersion])
+}
+
+// Sessão de autenticação com o ACS de um cliente (1 por usuário): guarda o
+// bearer token já obtido para reaproveitar em novos registros sem repetir
+// client_id/client_secret, até expirar ou até o usuário trocar de domínio.
+// O token nunca é guardado em texto puro (ver src/lib/crypto.ts).
+model AcsSession {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain               String
+  accessTokenEncrypted String
+  expiresAt            DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }

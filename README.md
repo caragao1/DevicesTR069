@@ -18,15 +18,17 @@ workarounds e o status de cada uma.
 - **Capacidades de equipamentos** (`/capacidades`): consulta os recursos que
   um hardware/firmware específico suporta ou não, registrada a partir da API
   do ACS do cliente (rota `/api/v1/devices/capabilities`) informando
-  domínio, client_id/client_secret e o número de série do equipamento.
+  domínio, client_id/client_secret e o número de série do equipamento. O
+  bearer token obtido fica salvo (criptografado, um por usuário) e é
+  reaproveitado nos próximos registros até expirar ou até clicar em
+  "Trocar domínio" — não precisa reautenticar a cada equipamento.
   Consulta por seletores em cascata (fabricante → modelo → hardware →
   firmware) numa página só, com um resumo curado dos recursos mais
   relevantes (e o técnico completo disponível ao expandir cada grupo).
   É possível marcar vários equipamentos numa lista temporária (só da
   sessão do navegador) e gerar um relatório em PDF, via impressão do
   navegador, com o resumo de todos eles. Consulta pública; registrar
-  exige login (qualquer cargo). O client_secret é usado só na hora do
-  registro e nunca é armazenado.
+  exige login (qualquer cargo). O client_secret nunca é armazenado.
 - Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
   fabricantes e limitações) e **Administrador** (também pode excluir
   qualquer informação e gerenciar usuários em `/usuarios`). Excluir
@@ -50,7 +52,8 @@ Requer um Postgres acessível (local via Docker, ou um banco gratuito no
 npm install
 
 cp .env.example .env
-# edite o .env: DATABASE_URL, DIRECT_URL, AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
+# edite o .env: DATABASE_URL, DIRECT_URL, AUTH_SECRET, ADMIN_EMAIL,
+# ADMIN_PASSWORD, ACS_TOKEN_ENCRYPTION_KEY
 
 npm run db:migrate   # cria as tabelas e roda o seed
 npm run dev           # http://localhost:3000
@@ -79,6 +82,7 @@ Veja `.env.example`:
 | `AUTH_SECRET`    | Segredo usado para assinar o cookie de sessão. Troque em produção.         |
 | `ADMIN_EMAIL`    | E-mail do usuário administrador criado pelo seed.                          |
 | `ADMIN_PASSWORD` | Senha do usuário administrador criado pelo seed.                           |
+| `ACS_TOKEN_ENCRYPTION_KEY` | Chave de 32 bytes (base64) para criptografar o bearer token do ACS salvo em "Capacidades de equipamentos". Gere com `openssl rand -base64 32`. |
 
 ## Deploy no Vercel
 
@@ -96,8 +100,9 @@ Não precisa de CLI — dá pra fazer tudo pelo dashboard:
      mesmo).
 3. **Defina as demais variáveis de ambiente** em
    **Settings → Environment Variables**: `AUTH_SECRET` (gere um valor
-   aleatório longo, ex: `openssl rand -base64 32`), `ADMIN_EMAIL` e
-   `ADMIN_PASSWORD`.
+   aleatório longo, ex: `openssl rand -base64 32`), `ADMIN_EMAIL`,
+   `ADMIN_PASSWORD` e `ACS_TOKEN_ENCRYPTION_KEY` (também com
+   `openssl rand -base64 32`).
 4. **Deploy**: o build (`npm run build`) já roda `prisma migrate deploy`
    antes do `next build`, então as tabelas são criadas automaticamente no
    primeiro deploy — não precisa rodar migração manualmente.

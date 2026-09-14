@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/session";
-import { registerEquipmentCapabilityAction } from "@/lib/actions/capabilities";
+import { getActiveAcsSession } from "@/lib/acs-session";
+import { registerEquipmentCapabilityAction, clearAcsSessionAction } from "@/lib/actions/capabilities";
 
 const inputClass =
   "rounded-md border border-stone-200 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900";
@@ -7,9 +8,11 @@ const inputClass =
 export default async function RegisterCapabilityPage({
   searchParams,
 }: PageProps<"/capacidades/registrar">) {
-  await requireSession();
+  const session = await requireSession();
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : undefined;
+
+  const acsSession = await getActiveAcsSession(session.userId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,12 +21,31 @@ export default async function RegisterCapabilityPage({
           Registrar equipamento
         </h1>
         <p className="mt-1.5 max-w-xl text-sm text-stone-500 dark:text-slate-400">
-          Informe o domínio e as credenciais do ACS do cliente e o número de
-          série do equipamento. Vamos consultar as capacidades suportadas por
-          esse hardware/firmware e salvar apenas o resultado — o client_secret
-          não é armazenado.
+          {acsSession
+            ? "Informe o número de série do equipamento. Vamos consultar as capacidades suportadas por esse hardware/firmware e salvar apenas o resultado."
+            : "Informe o domínio e as credenciais do ACS do cliente e o número de série do equipamento. Vamos consultar as capacidades suportadas por esse hardware/firmware e salvar apenas o resultado — o client_secret não é armazenado."}
         </p>
       </div>
+
+      {acsSession && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm dark:border-teal-900 dark:bg-teal-950">
+          <span className="text-teal-800 dark:text-teal-300">
+            Conectado a <strong>{acsSession.domain}</strong> · sessão expira às{" "}
+            {acsSession.expiresAt.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          <form action={clearAcsSessionAction}>
+            <button
+              type="submit"
+              className="rounded-md border border-teal-700 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 dark:border-teal-500 dark:text-teal-400 dark:hover:bg-teal-900"
+            >
+              Trocar domínio
+            </button>
+          </form>
+        </div>
+      )}
 
       <form
         action={registerEquipmentCapabilityAction}
@@ -34,34 +56,38 @@ export default async function RegisterCapabilityPage({
             {error}
           </p>
         )}
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-stone-700 dark:text-stone-200">
-            Domínio do ACS *
-          </span>
-          <input
-            name="domain"
-            required
-            placeholder="https://acs.seudominio.com.br"
-            className={inputClass}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-stone-700 dark:text-stone-200">
-            Client ID *
-          </span>
-          <input name="clientId" required className={inputClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-stone-700 dark:text-stone-200">
-            Client secret *
-          </span>
-          <input
-            type="password"
-            name="clientSecret"
-            required
-            className={inputClass}
-          />
-        </label>
+        {!acsSession && (
+          <>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-stone-700 dark:text-stone-200">
+                Domínio do ACS *
+              </span>
+              <input
+                name="domain"
+                required
+                placeholder="https://acs.seudominio.com.br"
+                className={inputClass}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-stone-700 dark:text-stone-200">
+                Client ID *
+              </span>
+              <input name="clientId" required className={inputClass} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-stone-700 dark:text-stone-200">
+                Client secret *
+              </span>
+              <input
+                type="password"
+                name="clientSecret"
+                required
+                className={inputClass}
+              />
+            </label>
+          </>
+        )}
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-stone-700 dark:text-stone-200">
             Número de série do equipamento *
