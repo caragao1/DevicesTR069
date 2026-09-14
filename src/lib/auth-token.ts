@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
+import { isRole, type Role } from "@/lib/constants";
 
 export const SESSION_COOKIE = "ixc_session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7; // 7 dias
@@ -15,6 +16,7 @@ export type SessionPayload = {
   userId: string;
   email: string;
   name: string;
+  role: Role;
 };
 
 export async function createSessionToken(payload: SessionPayload) {
@@ -33,12 +35,15 @@ export async function verifySessionToken(
     if (
       typeof payload.userId === "string" &&
       typeof payload.email === "string" &&
-      typeof payload.name === "string"
+      typeof payload.name === "string" &&
+      typeof payload.role === "string" &&
+      isRole(payload.role)
     ) {
       return {
         userId: payload.userId,
         email: payload.email,
         name: payload.name,
+        role: payload.role,
       };
     }
     return null;

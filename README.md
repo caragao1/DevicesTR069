@@ -15,6 +15,9 @@ workarounds e o status de cada uma.
 - Login interno (e-mail/senha) para a equipe cadastrar e manter os dados.
 - CRUD de modelos de equipamento e de suas limitações.
 - Toda a aplicação é protegida por autenticação — não há acesso sem login.
+- Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
+  fabricantes e limitações) e **Administrador** (também pode excluir
+  qualquer informação e gerenciar usuários em `/usuarios`).
 
 ## Stack técnica
 
@@ -41,12 +44,16 @@ npm run dev           # http://localhost:3000
 ```
 
 O `db:migrate` já dispara o `db:seed` automaticamente (configurado no
-`package.json`), criando o usuário admin e alguns modelos de exemplo. O
-seed também pode ser rodado isoladamente a qualquer momento com
-`npm run db:seed` — ele é idempotente (não duplica dados existentes).
+`package.json`), criando o usuário admin (cargo Administrador) e alguns
+modelos de exemplo. O seed também pode ser rodado isoladamente a qualquer
+momento com `npm run db:seed` — ele é idempotente (não duplica dados
+existentes).
 
 Acesse `http://localhost:3000`, você será redirecionado para `/login`.
 Use o e-mail/senha definidos em `ADMIN_EMAIL`/`ADMIN_PASSWORD` no `.env`.
+Novos usuários (membros ou outros administradores) são criados pelo próprio
+admin em `/usuarios` dentro da aplicação — não é preciso rodar nenhum
+script.
 
 ## Variáveis de ambiente
 

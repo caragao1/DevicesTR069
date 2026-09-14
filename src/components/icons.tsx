@@ -89,6 +89,16 @@ export function MoonIcon({ className }: IconProps) {
   );
 }
 
+export function UsersIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19c.7-3.2 3-5 5.5-5s4.8 1.8 5.5 5" />
+      <path d="M15.5 5.3a3.2 3.2 0 0 1 0 5.9M18.5 19c-.5-2.4-1.8-4-3.6-4.7" />
+    </svg>
+  );
+}
+
 export function ExternalLinkIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>
