@@ -50,6 +50,19 @@ export const STATUS_LABELS: Record<LimitationStatus, string> = {
   RESOLVIDO: "Resolvido",
 };
 
+export const ROLES = ["ADMIN", "MEMBRO"] as const;
+
+export type Role = (typeof ROLES)[number];
+
+export const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "Administrador",
+  MEMBRO: "Membro",
+};
+
+export function isRole(value: string): value is Role {
+  return (ROLES as readonly string[]).includes(value);
+}
+
 export function isCategory(value: string): value is Category {
   return (CATEGORIES as readonly string[]).includes(value);
 }

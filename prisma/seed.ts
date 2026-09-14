@@ -145,11 +145,12 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: { role: "ADMIN" },
     create: {
       email: adminEmail,
       passwordHash,
       name: "Administrador",
+      role: "ADMIN",
     },
   });
   console.log(`Usuário admin disponível: ${adminEmail} / senha definida em ADMIN_PASSWORD`);

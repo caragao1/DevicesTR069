@@ -93,11 +93,13 @@ export default async function ModelPage({
               >
                 Editar modelo
               </Link>
-              <ConfirmDeleteForm
-                action={deleteModelWithId}
-                confirmMessage={`Excluir o modelo ${model.manufacturer} ${model.modelName} e todas as suas limitações?`}
-                label="Excluir modelo"
-              />
+              {session.role === "ADMIN" && (
+                <ConfirmDeleteForm
+                  action={deleteModelWithId}
+                  confirmMessage={`Excluir o modelo ${model.manufacturer} ${model.modelName} e todas as suas limitações?`}
+                  label="Excluir modelo"
+                />
+              )}
             </div>
           )}
         </div>
@@ -207,12 +209,14 @@ export default async function ModelPage({
                       >
                         Editar
                       </Link>
-                      <ConfirmDeleteForm
-                        action={deleteLimitationWithId}
-                        confirmMessage={`Excluir a limitação "${limitation.title}"?`}
-                        label="Excluir"
-                        variant="link"
-                      />
+                      {session.role === "ADMIN" && (
+                        <ConfirmDeleteForm
+                          action={deleteLimitationWithId}
+                          confirmMessage={`Excluir a limitação "${limitation.title}"?`}
+                          label="Excluir"
+                          variant="link"
+                        />
+                      )}
                     </div>
                   )}
                 </div>

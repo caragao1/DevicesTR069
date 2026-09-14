@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireAdmin, requireSession } from "@/lib/session";
 import { isCategory, isSeverity, isStatus } from "@/lib/constants";
 
 function parseLimitationForm(formData: FormData) {
@@ -85,7 +85,7 @@ export async function deleteLimitationAction(
   id: string,
   deviceModelId: string
 ) {
-  await requireSession();
+  await requireAdmin();
   await prisma.limitation.delete({ where: { id } });
   redirect(`/models/${deviceModelId}`);
 }

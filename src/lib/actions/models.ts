@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireAdmin, requireSession } from "@/lib/session";
 
 function parseModelForm(formData: FormData) {
   return {
@@ -72,7 +72,7 @@ export async function updateModelAction(id: string, formData: FormData) {
 }
 
 export async function deleteModelAction(id: string) {
-  await requireSession();
+  await requireAdmin();
   await prisma.deviceModel.delete({ where: { id } });
   redirect("/");
 }

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
+import { isRole } from "@/lib/constants";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
@@ -70,6 +71,7 @@ export async function loginAction(formData: FormData) {
     userId: user.id,
     email: user.email,
     name: user.name,
+    role: isRole(user.role) ? user.role : "MEMBRO",
   });
 
   redirect(safeNext);
