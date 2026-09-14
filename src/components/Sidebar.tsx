@@ -2,7 +2,14 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { SessionPayload } from "@/lib/session";
 import { logoutAction } from "@/lib/actions/auth";
-import { BrandIcon, CpeIcon, OltIcon, UsersIcon } from "@/components/icons";
+import {
+  BrandIcon,
+  ChecklistIcon,
+  CpeIcon,
+  OltIcon,
+  PlusIcon,
+  UsersIcon,
+} from "@/components/icons";
 import { ManufacturerLink } from "@/components/ManufacturerLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -66,6 +73,28 @@ export async function Sidebar({
           </div>
         </div>
       )}
+
+      <div className="mt-3 flex flex-col gap-0.5 border-t border-slate-800 px-4 pb-2 pt-5">
+        <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          Capacidades de equipamentos
+        </div>
+        <Link
+          href="/capacidades"
+          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-stone-50"
+        >
+          <ChecklistIcon className="h-[17px] w-[17px]" />
+          Equipamentos registrados
+        </Link>
+        {session && (
+          <Link
+            href="/capacidades/registrar"
+            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-stone-50"
+          >
+            <PlusIcon className="h-[17px] w-[17px]" />
+            Registrar equipamento
+          </Link>
+        )}
+      </div>
 
       {session?.role === "ADMIN" && (
         <div className="mt-3 flex flex-col gap-0.5 border-t border-slate-800 px-4 pb-2 pt-5">

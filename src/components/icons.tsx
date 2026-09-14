@@ -99,6 +99,17 @@ export function UsersIcon({ className }: IconProps) {
   );
 }
 
+export function ChecklistIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="m4 7 1.5 1.5L8 6" />
+      <path d="m4 13 1.5 1.5L8 11" />
+      <path d="m4 19 1.5 1.5L8 17" />
+      <path d="M11 7h9M11 13h9M11 19h9" />
+    </svg>
+  );
+}
+
 export function ExternalLinkIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>

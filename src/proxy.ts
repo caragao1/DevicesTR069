@@ -16,6 +16,15 @@ function isPublicReadPath(pathname: string): boolean {
   if (pathname !== "/models/new" && MODEL_DETAIL_PATTERN.test(pathname)) {
     return true;
   }
+  if (pathname === "/capacidades") return true;
+  if (pathname.startsWith("/capacidades/registro/")) return true;
+  if (
+    pathname.startsWith("/capacidades/") &&
+    pathname !== "/capacidades/registrar" &&
+    !pathname.startsWith("/capacidades/registrar/")
+  ) {
+    return true;
+  }
   return false;
 }
 

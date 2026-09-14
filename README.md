@@ -15,6 +15,13 @@ workarounds e o status de cada uma.
 - Login interno (e-mail/senha) apenas para quem for cadastrar/editar dados.
 - CRUD de modelos de equipamento e de suas limitações, disponível a
   qualquer usuário logado.
+- **Capacidades de equipamentos** (`/capacidades`): consulta os recursos que
+  um hardware/firmware específico suporta ou não, registrada a partir da API
+  do ACS do cliente (rota `/api/v1/devices/capabilities`) informando
+  domínio, client_id/client_secret e o número de série do equipamento.
+  Navegação por fabricante → modelo → hardware → firmware. Consulta
+  pública; registrar exige login (qualquer cargo). O client_secret é usado
+  só na hora do registro e nunca é armazenado.
 - Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
   fabricantes e limitações) e **Administrador** (também pode excluir
   qualquer informação e gerenciar usuários em `/usuarios`). Excluir
