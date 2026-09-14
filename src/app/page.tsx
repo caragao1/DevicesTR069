@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import { SeverityBadge } from "@/components/Badges";
 import { ManufacturerIcon } from "@/components/ManufacturerIcon";
 import { PlusIcon, SearchIcon } from "@/components/icons";
@@ -14,6 +15,7 @@ type ManufacturerSummary = {
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
   const query = typeof sp.q === "string" ? sp.q.trim() : "";
+  const session = await getSession();
 
   const allModels = await prisma.deviceModel.findMany({
     select: {
@@ -79,13 +81,15 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             conhecidas.
           </p>
         </div>
-        <Link
-          href="/models/new"
-          className="flex items-center gap-1.5 whitespace-nowrap rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Novo modelo
-        </Link>
+        {session && (
+          <Link
+            href="/models/new"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Novo modelo
+          </Link>
+        )}
       </div>
 
       <form className="flex gap-2" action="/">
