@@ -19,9 +19,14 @@ workarounds e o status de cada uma.
   um hardware/firmware específico suporta ou não, registrada a partir da API
   do ACS do cliente (rota `/api/v1/devices/capabilities`) informando
   domínio, client_id/client_secret e o número de série do equipamento.
-  Navegação por fabricante → modelo → hardware → firmware. Consulta
-  pública; registrar exige login (qualquer cargo). O client_secret é usado
-  só na hora do registro e nunca é armazenado.
+  Consulta por seletores em cascata (fabricante → modelo → hardware →
+  firmware) numa página só, com um resumo curado dos recursos mais
+  relevantes (e o técnico completo disponível ao expandir cada grupo).
+  É possível marcar vários equipamentos numa lista temporária (só da
+  sessão do navegador) e gerar um relatório em PDF, via impressão do
+  navegador, com o resumo de todos eles. Consulta pública; registrar
+  exige login (qualquer cargo). O client_secret é usado só na hora do
+  registro e nunca é armazenado.
 - Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
   fabricantes e limitações) e **Administrador** (também pode excluir
   qualquer informação e gerenciar usuários em `/usuarios`). Excluir
