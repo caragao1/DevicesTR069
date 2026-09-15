@@ -34,13 +34,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="flex min-h-full font-sans text-stone-900 dark:text-stone-50">
-        <Sidebar session={session} />
-        <div className="flex min-h-screen flex-1 flex-col bg-stone-50 dark:bg-slate-950">
-          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10 sm:px-10">
+      <body className="flex min-h-full font-sans text-stone-900 dark:text-stone-50 print:block">
+        <div className="print:hidden">
+          <Sidebar session={session} />
+        </div>
+        <div className="flex min-h-screen flex-1 flex-col bg-stone-50 dark:bg-slate-950 print:block print:min-h-0 print:bg-white">
+          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10 sm:px-10 print:max-w-none print:p-0">
             {children}
           </main>
-          <footer className="border-t border-stone-200 py-4 text-center text-xs text-stone-400 dark:border-slate-800 dark:text-slate-500">
+          <footer className="border-t border-stone-200 py-4 text-center text-xs text-stone-400 dark:border-slate-800 dark:text-slate-500 print:hidden">
             IXC ACS · Base de limitações de modelos TR-069
           </footer>
         </div>

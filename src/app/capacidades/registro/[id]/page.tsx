@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { deleteEquipmentCapabilityAction } from "@/lib/actions/capabilities";
 import { ManufacturerIcon } from "@/components/ManufacturerIcon";
-import { CapabilityTree } from "@/components/CapabilityTree";
+import { CapabilityGroupsPanel } from "@/components/CapabilityGroupsPanel";
 import { ConfirmDeleteForm } from "@/components/ConfirmDeleteForm";
 import { ArrowLeftIcon } from "@/components/icons";
 
@@ -27,11 +27,11 @@ export default async function CapabilityRecordPage({
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          href={`/capacidades/${encodeURIComponent(record.manufacturer)}/${encodeURIComponent(record.modelName)}/${encodeURIComponent(record.hardware)}`}
+          href={`/capacidades?manufacturer=${encodeURIComponent(record.manufacturer)}&modelName=${encodeURIComponent(record.modelName)}&hardware=${encodeURIComponent(record.hardware)}&firmwareVersion=${encodeURIComponent(record.firmwareVersion)}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
         >
           <ArrowLeftIcon className="h-3.5 w-3.5" />
-          Voltar para {record.hardware}
+          Voltar para consulta
         </Link>
 
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
@@ -135,7 +135,7 @@ export default async function CapabilityRecordPage({
         <h2 className="mb-3 text-lg font-semibold text-stone-900 dark:text-stone-50">
           Capacidades suportadas
         </h2>
-        <CapabilityTree capabilities={capabilities} />
+        <CapabilityGroupsPanel capabilities={capabilities} />
       </div>
     </div>
   );
