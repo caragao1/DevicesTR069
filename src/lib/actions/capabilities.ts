@@ -102,8 +102,11 @@ export async function registerEquipmentCapabilityAction(formData: FormData) {
     base = existing.domain;
     try {
       accessToken = decryptSecret(existing.accessTokenEncrypted);
-    } catch {
-      fail("Não foi possível recuperar a sessão salva com o ACS. Troque o domínio e autentique novamente.");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "erro desconhecido";
+      fail(
+        `Não foi possível recuperar a sessão salva com o ACS: ${reason}. Troque o domínio e autentique novamente.`
+      );
       return;
     }
   } else {
@@ -169,8 +172,12 @@ export async function registerEquipmentCapabilityAction(formData: FormData) {
     let accessTokenEncrypted: string;
     try {
       accessTokenEncrypted = encryptSecret(newAccessToken);
-    } catch {
-      fail("Não foi possível salvar a sessão com o ACS (configuração do servidor). Contate um administrador.");
+    } catch (error) {
+      // A mensagem do erro aqui só fala sobre a configuração da chave em si
+      // (ausente / tamanho errado) — não expõe nenhum segredo — e ajuda a
+      // diagnosticar rápido sem precisar abrir os logs do Vercel.
+      const reason = error instanceof Error ? error.message : "erro desconhecido";
+      fail(`Não foi possível salvar a sessão com o ACS: ${reason}`);
       return;
     }
 
