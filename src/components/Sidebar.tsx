@@ -11,6 +11,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 import { ManufacturerLink } from "@/components/ManufacturerLink";
+import { SidebarNavLink } from "@/components/SidebarNavLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export async function Sidebar({
@@ -43,13 +44,12 @@ export async function Sidebar({
         <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Equipamentos
         </div>
-        <Link
+        <SidebarNavLink
           href="/"
-          className="flex items-center gap-2.5 rounded-md bg-teal-800/40 px-3 py-2 text-sm font-semibold text-teal-200"
-        >
-          <CpeIcon className="h-[17px] w-[17px]" />
-          CPE / ONT
-        </Link>
+          icon={<CpeIcon className="h-[17px] w-[17px]" />}
+          label="CPE / ONT"
+          prefixes={["/fabricantes/", "/models/", "/limitations/"]}
+        />
         <div className="flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-slate-500">
           <span className="flex items-center gap-2.5 text-sm">
             <OltIcon className="h-[17px] w-[17px]" />
@@ -78,21 +78,19 @@ export async function Sidebar({
         <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Capacidades de equipamentos
         </div>
-        <Link
+        <SidebarNavLink
           href="/capacidades"
-          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-stone-50"
-        >
-          <ChecklistIcon className="h-[17px] w-[17px]" />
-          Equipamentos registrados
-        </Link>
+          icon={<ChecklistIcon className="h-[17px] w-[17px]" />}
+          label="Equipamentos registrados"
+          exact={["/capacidades/relatorio"]}
+          prefixes={["/capacidades/registro/"]}
+        />
         {session && (
-          <Link
+          <SidebarNavLink
             href="/capacidades/registrar"
-            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-stone-50"
-          >
-            <PlusIcon className="h-[17px] w-[17px]" />
-            Registrar equipamento
-          </Link>
+            icon={<PlusIcon className="h-[17px] w-[17px]" />}
+            label="Registrar equipamento"
+          />
         )}
       </div>
 
@@ -101,13 +99,12 @@ export async function Sidebar({
           <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             Administração
           </div>
-          <Link
+          <SidebarNavLink
             href="/usuarios"
-            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-stone-50"
-          >
-            <UsersIcon className="h-[17px] w-[17px]" />
-            Usuários
-          </Link>
+            icon={<UsersIcon className="h-[17px] w-[17px]" />}
+            label="Usuários"
+            prefixes={["/usuarios/"]}
+          />
         </div>
       )}
 
