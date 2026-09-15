@@ -166,7 +166,13 @@ export async function registerEquipmentCapabilityAction(formData: FormData) {
     }
 
     const expiresAt = parseExpiresAt(tokenBody);
-    const accessTokenEncrypted = encryptSecret(newAccessToken);
+    let accessTokenEncrypted: string;
+    try {
+      accessTokenEncrypted = encryptSecret(newAccessToken);
+    } catch {
+      fail("Não foi possível salvar a sessão com o ACS (configuração do servidor). Contate um administrador.");
+      return;
+    }
 
     await prisma.acsSession.upsert({
       where: { userId: session.userId },
