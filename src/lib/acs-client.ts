@@ -306,6 +306,8 @@ export type DiscoveredDevice = {
   firmwareVersion: string | null;
   online: boolean;
   lastInform: string | null;
+  // versão do pacote do ACS para o modelo (v2, v3...) — só o v3 tem capacidades
+  packageVersion: string | null;
 };
 
 type ListApiResponse = {
@@ -378,6 +380,7 @@ export async function listDevicesPage(
       firmwareVersion: requiredString(info.softwareVersion),
       online: register.status === true,
       lastInform: requiredString(register.lastInform),
+      packageVersion: requiredString(info.packageVersion),
     });
   }
 

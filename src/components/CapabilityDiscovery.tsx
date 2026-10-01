@@ -33,7 +33,18 @@ type Combo = {
   serialNumber: string;
   serialOnline: boolean;
   serialLastInform: string | null;
+  packageVersions: string[];
 };
+
+// Pacotes v1/v2 do ACS não trazem capacidades (a rota responde só com
+// "device"): se nenhum equipamento da combinação tem pacote mais novo, ela
+// vem desmarcada, sem gastar uma consulta. Pacote desconhecido conta como novo.
+function isLegacyPackage(combo: Combo): boolean {
+  return (
+    combo.packageVersions.length > 0 &&
+    combo.packageVersions.every((version) => /^v[12]$/i.test(version.trim()))
+  );
+}
 
 type RowStatus =
   | { state: "running" }
@@ -137,10 +148,14 @@ export function CapabilityDiscovery({
             serialNumber: device.serialNumber,
             serialOnline: device.online,
             serialLastInform: device.lastInform,
+            packageVersions: device.packageVersion ? [device.packageVersion] : [],
           });
           continue;
         }
         combo.count++;
+        if (device.packageVersion && !combo.packageVersions.includes(device.packageVersion)) {
+          combo.packageVersions.push(device.packageVersion);
+        }
         if (device.online) combo.onlineCount++;
         if (isBetterSerial(device, combo)) {
           combo.serialNumber = device.serialNumber;
@@ -165,7 +180,11 @@ export function CapabilityDiscovery({
     );
     setCombos(list);
     setIncomplete(missing);
-    setSelected(new Set(list.filter((c) => !registered.has(c.key)).map((c) => c.key)));
+    setSelected(
+      new Set(
+        list.filter((c) => !registered.has(c.key) && !isLegacyPackage(c)).map((c) => c.key)
+      )
+    );
     setPhase("scanned");
   }
 
@@ -217,6 +236,7 @@ export function CapabilityDiscovery({
   }
 
   const newCount = combos.filter((c) => !registered.has(c.key)).length;
+  const legacyNewCount = combos.filter((c) => !registered.has(c.key) && isLegacyPackage(c)).length;
   const visible = onlyNew
     ? combos.filter((c) => !registered.has(c.key) || rowStatus[c.key])
     : combos;
@@ -345,6 +365,14 @@ export function CapabilityDiscovery({
             </button>
           </div>
 
+          {legacyNewCount > 0 && (
+            <p className="text-sm text-stone-600 dark:text-slate-400">
+              {legacyNewCount} combinação(ões) nova(s) só têm equipamentos com pacote v1/v2 do
+              ACS, que não traz capacidades — ficaram desmarcadas. Marque se quiser consultar
+              mesmo assim.
+            </p>
+          )}
+
           {visible.length === 0 ? (
             <p className="rounded-lg border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500 dark:border-slate-700 dark:text-slate-400">
               {combos.length === 0
@@ -416,7 +444,14 @@ export function CapabilityDiscovery({
                           ) : isRegistered ? (
                             <span className="text-stone-500 dark:text-slate-400">Já registrado</span>
                           ) : (
-                            <span className="font-medium text-amber-700 dark:text-amber-400">Novo</span>
+                            isLegacyPackage(combo) ? (
+                              <span className="text-stone-500 dark:text-slate-400">
+                                Novo · pacote {combo.packageVersions.join("/")}, provavelmente sem
+                                capacidades no ACS
+                              </span>
+                            ) : (
+                              <span className="font-medium text-amber-700 dark:text-amber-400">Novo</span>
+                            )
                           )}
                         </td>
                       </tr>
