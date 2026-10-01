@@ -192,7 +192,10 @@ export async function fetchAndStoreCapabilities(
   auth: AcsAuth,
   userId: string,
   serialNumber: string
-): Promise<{ ok: true; id: string; created: boolean } | (Failure & { sessionRejected?: boolean })> {
+): Promise<
+  | { ok: true; id: string; created: boolean }
+  | (Failure & { sessionRejected?: boolean; noCapabilities?: boolean })
+> {
   let capabilitiesResponse: Response;
   try {
     capabilitiesResponse = await fetchWithTimeout(
@@ -226,6 +229,17 @@ export async function fetchAndStoreCapabilities(
   const hardware = requiredString(data.device?.hardware);
   const firmwareVersion = requiredString(data.device?.firmwareVersion);
   const capabilities = data.capabilities;
+
+  // O ACS reconhece o equipamento mas não tem capacidades cadastradas para
+  // esse modelo/firmware: a resposta vem só com "device", sem "capabilities".
+  if (manufacturer && modelName && hardware && firmwareVersion && data.capabilities == null) {
+    const pkg = requiredString(data.device?.packageVersion);
+    return {
+      ok: false,
+      noCapabilities: true,
+      error: `O ACS não tem capacidades cadastradas para ${manufacturer} ${modelName} (hardware ${hardware}, firmware ${firmwareVersion}${pkg ? `, pacote ${pkg}` : ""}).`,
+    };
+  }
 
   const missing = [
     !manufacturer && "device.manufacturer",

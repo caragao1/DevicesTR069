@@ -38,7 +38,9 @@ type Combo = {
 type RowStatus =
   | { state: "running" }
   | { state: "ok"; id: string; created: boolean }
-  | { state: "error"; message: string };
+  | { state: "error"; message: string }
+  // o ACS respondeu, mas não tem capacidades para esse modelo/firmware
+  | { state: "none"; message: string };
 
 function isBetterSerial(device: DiscoveredDevice, combo: Combo): boolean {
   if (device.online !== combo.serialOnline) return device.online;
@@ -189,8 +191,19 @@ export function CapabilityDiscovery({
         } else {
           setRowStatus((prev) => ({
             ...prev,
-            [combo.key]: { state: "error", message: result.error },
+            [combo.key]: {
+              state: result.noCapabilities ? "none" : "error",
+              message: result.error,
+            },
           }));
+          // sem capacidades não é falha: não fica marcado para tentar de novo
+          if (result.noCapabilities) {
+            setSelected((prev) => {
+              const next = new Set(prev);
+              next.delete(combo.key);
+              return next;
+            });
+          }
           if (result.needsLogin) {
             stopRef.current = true;
             setError(result.error);
@@ -212,6 +225,7 @@ export function CapabilityDiscovery({
   ).length;
   const doneCount = Object.values(rowStatus).filter((s) => s.state === "ok").length;
   const failedCount = Object.values(rowStatus).filter((s) => s.state === "error").length;
+  const noCapabilitiesCount = Object.values(rowStatus).filter((s) => s.state === "none").length;
   const busy = phase === "scanning" || phase === "registering";
 
   function toggle(key: string) {
@@ -296,11 +310,12 @@ export function CapabilityDiscovery({
 
       {(phase === "scanned" || phase === "registering") && (
         <>
-          <dl className="grid gap-3 sm:grid-cols-4">
+          <dl className="grid gap-3 sm:grid-cols-5">
             {[
               ["Combinações encontradas", combos.length],
               ["Novas (não registradas)", newCount],
               ["Registradas agora", doneCount],
+              ["Sem capacidades no ACS", noCapabilitiesCount],
               ["Com falha", failedCount],
             ].map(([label, value]) => (
               <div
@@ -392,6 +407,10 @@ export function CapabilityDiscovery({
                             >
                               {status.created ? "Registrado" : "Atualizado"} →
                             </Link>
+                          ) : status?.state === "none" ? (
+                            <span className="text-amber-700 dark:text-amber-400" title={status.message}>
+                              Sem capacidades no ACS
+                            </span>
                           ) : status?.state === "error" ? (
                             <span className="text-red-700 dark:text-red-400">{status.message}</span>
                           ) : isRegistered ? (
