@@ -127,7 +127,10 @@ Não precisa de CLI — dá pra fazer tudo pelo dashboard:
    `openssl rand -base64 32`).
 4. **Deploy**: o build (`npm run build`) já roda `prisma migrate deploy`
    antes do `next build`, então as tabelas são criadas automaticamente no
-   primeiro deploy — não precisa rodar migração manualmente.
+   primeiro deploy — não precisa rodar migração manualmente. Nos deploys de
+   **Preview** (branches) as migrações são puladas
+   (`scripts/migrate-deploy.mjs`): lá não existe `DIRECT_URL` e o banco é o
+   mesmo da produção, então elas só rodam no deploy de produção, após o merge.
 5. **Rode o seed uma vez** (cria o usuário admin), apontando para o banco
    de produção — pegue a connection string em **Storage → seu banco →
    `.env.local`** no dashboard do Vercel:
