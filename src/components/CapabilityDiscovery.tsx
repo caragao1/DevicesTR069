@@ -33,16 +33,58 @@ type Combo = {
   serialNumber: string;
   serialOnline: boolean;
   serialLastInform: string | null;
+  packageVersions: string[];
 };
+
+// Pacotes v1/v2 do ACS não trazem capacidades (a rota responde só com
+// "device"): se nenhum equipamento da combinação tem pacote mais novo, ela
+// vem desmarcada, sem gastar uma consulta. Pacote desconhecido conta como novo.
+function isLegacyPackage(combo: Combo): boolean {
+  return (
+    combo.packageVersions.length > 0 &&
+    combo.packageVersions.every((version) => /^v[12]$/i.test(version.trim()))
+  );
+}
 
 type RowStatus =
   | { state: "running" }
   | { state: "ok"; id: string; created: boolean }
-  | { state: "error"; message: string };
+  | { state: "error"; message: string }
+  // o ACS respondeu, mas não tem capacidades para esse modelo/firmware
+  | { state: "none"; message: string };
 
 function isBetterSerial(device: DiscoveredDevice, combo: Combo): boolean {
   if (device.online !== combo.serialOnline) return device.online;
   return (device.lastInform ?? "") > (combo.serialLastInform ?? "");
+}
+
+const RETRY_DELAYS_MS = [2000, 5000, 10000];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type ActionFailure = { ok: false; error: string; needsLogin?: boolean; noCapabilities?: boolean };
+type ActionResult = { ok: true } | ActionFailure;
+
+// Chamada a uma server action com novas tentativas. Falha de rede ou timeout
+// (exceção) é sempre repetida; erro devolvido pela API só com retryApiErrors
+// (na listagem, um 5xx do ACS costuma passar; num SN, um 404 não). Sessão
+// recusada nunca é repetida.
+async function withRetry<T extends ActionResult>(
+  call: () => Promise<T>,
+  { retryApiErrors }: { retryApiErrors: boolean }
+): Promise<T | ActionFailure> {
+  let lastError = "Sem resposta do servidor.";
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const result = await call();
+      if (result.ok || result.needsLogin || !retryApiErrors) return result;
+      lastError = result.error;
+    } catch {
+      lastError = "Sem resposta do servidor (falha de rede ou tempo esgotado).";
+    }
+    if (attempt < RETRY_DELAYS_MS.length) await sleep(RETRY_DELAYS_MS[attempt]);
+  }
+  return { ok: false, error: `${lastError} (${RETRY_DELAYS_MS.length + 1} tentativas)` };
 }
 
 export function CapabilityDiscovery({
@@ -66,6 +108,7 @@ export function CapabilityDiscovery({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rowStatus, setRowStatus] = useState<Record<string, RowStatus>>({});
   const [onlyNew, setOnlyNew] = useState(true);
+  const [scanComplete, setScanComplete] = useState(false);
   const stopRef = useRef(false);
 
   function needsLogin(message: string) {
@@ -89,42 +132,80 @@ export function CapabilityDiscovery({
     else setConnectError(result.error);
   }
 
-  async function scan() {
+  // Estado da varredura fora do React: sobrevive a uma interrupção, para
+  // "Continuar leitura" retomar da página seguinte sem perder o que foi lido.
+  const scanRef = useRef({
+    byKey: new Map<string, Combo>(),
+    missing: [] as DiscoveredDevice[],
+    seen: new Set<string>(),
+    total: 0,
+    nextPage: 1,
+  });
+
+  function publishScan() {
+    const { byKey, missing } = scanRef.current;
+    const list = [...byKey.values()].sort(
+      (a, b) =>
+        a.manufacturer.localeCompare(b.manufacturer) ||
+        a.modelName.localeCompare(b.modelName) ||
+        a.hardware.localeCompare(b.hardware) ||
+        a.firmwareVersion.localeCompare(b.firmwareVersion)
+    );
+    setCombos(list);
+    setIncomplete([...missing]);
+    setSelected(
+      new Set(
+        list.filter((c) => !registered.has(c.key) && !isLegacyPackage(c)).map((c) => c.key)
+      )
+    );
+  }
+
+  async function scan(resume = false) {
     stopRef.current = false;
     setPhase("scanning");
     setError(null);
-    setPagesRead(0);
-    setDevicesRead(0);
-    setRowStatus({});
+    if (!resume) {
+      scanRef.current = {
+        byKey: new Map(),
+        missing: [],
+        seen: new Set(),
+        total: 0,
+        nextPage: 1,
+      };
+      setScanComplete(false);
+      setPagesRead(0);
+      setDevicesRead(0);
+      setRowStatus({});
+    }
+    const state = scanRef.current;
 
-    const byKey = new Map<string, Combo>();
-    const missing: DiscoveredDevice[] = [];
-    const seen = new Set<string>();
-    let total = 0;
-
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      if (stopRef.current) break;
-      const result = await discoverDevicesPageAction(page);
+    while (state.nextPage <= MAX_PAGES && !stopRef.current) {
+      const page = state.nextPage;
+      const result = await withRetry(() => discoverDevicesPageAction(page), {
+        retryApiErrors: true,
+      });
       if (!result.ok) {
-        setError(result.error);
+        setError(
+          `Leitura interrompida na página ${page}: ${result.error} Os ${state.total} equipamentos já lidos foram mantidos — use "Continuar leitura" para retomar dessa página.`
+        );
         if (result.needsLogin) needsLogin(result.error);
         break;
       }
 
       let fresh = 0;
       for (const device of result.devices) {
-        if (seen.has(device.serialNumber)) continue;
-        seen.add(device.serialNumber);
+        if (state.seen.has(device.serialNumber)) continue;
+        state.seen.add(device.serialNumber);
         fresh++;
         const { manufacturer, modelName, hardware, firmwareVersion } = device;
         if (!manufacturer || !modelName || !hardware || !firmwareVersion) {
-          missing.push(device);
+          state.missing.push(device);
           continue;
         }
         const key = capabilityKey({ manufacturer, modelName, hardware, firmwareVersion });
-        const combo = byKey.get(key);
+        const combo = state.byKey.get(key);
         if (!combo) {
-          byKey.set(key, {
+          state.byKey.set(key, {
             key,
             manufacturer,
             modelName,
@@ -135,10 +216,14 @@ export function CapabilityDiscovery({
             serialNumber: device.serialNumber,
             serialOnline: device.online,
             serialLastInform: device.lastInform,
+            packageVersions: device.packageVersion ? [device.packageVersion] : [],
           });
           continue;
         }
         combo.count++;
+        if (device.packageVersion && !combo.packageVersions.includes(device.packageVersion)) {
+          combo.packageVersions.push(device.packageVersion);
+        }
         if (device.online) combo.onlineCount++;
         if (isBetterSerial(device, combo)) {
           combo.serialNumber = device.serialNumber;
@@ -147,23 +232,18 @@ export function CapabilityDiscovery({
         }
       }
 
-      total += fresh;
+      state.total += fresh;
+      state.nextPage = page + 1;
       setPagesRead(page);
-      setDevicesRead(total);
+      setDevicesRead(state.total);
       // Página só com SNs já vistos: a API está repetindo — evita laço infinito.
-      if (!result.hasNextPage || (result.devices.length > 0 && fresh === 0)) break;
+      if (!result.hasNextPage || (result.devices.length > 0 && fresh === 0)) {
+        setScanComplete(true);
+        break;
+      }
     }
 
-    const list = [...byKey.values()].sort(
-      (a, b) =>
-        a.manufacturer.localeCompare(b.manufacturer) ||
-        a.modelName.localeCompare(b.modelName) ||
-        a.hardware.localeCompare(b.hardware) ||
-        a.firmwareVersion.localeCompare(b.firmwareVersion)
-    );
-    setCombos(list);
-    setIncomplete(missing);
-    setSelected(new Set(list.filter((c) => !registered.has(c.key)).map((c) => c.key)));
+    publishScan();
     setPhase("scanned");
   }
 
@@ -179,7 +259,10 @@ export function CapabilityDiscovery({
       while (queue.length && !stopRef.current) {
         const combo = queue.shift()!;
         setRowStatus((prev) => ({ ...prev, [combo.key]: { state: "running" } }));
-        const result = await registerCapabilityBySerialAction(combo.serialNumber);
+        const result = await withRetry(
+          () => registerCapabilityBySerialAction(combo.serialNumber),
+          { retryApiErrors: false }
+        );
         if (result.ok) {
           setRowStatus((prev) => ({
             ...prev,
@@ -189,8 +272,19 @@ export function CapabilityDiscovery({
         } else {
           setRowStatus((prev) => ({
             ...prev,
-            [combo.key]: { state: "error", message: result.error },
+            [combo.key]: {
+              state: result.noCapabilities ? "none" : "error",
+              message: result.error,
+            },
           }));
+          // sem capacidades não é falha: não fica marcado para tentar de novo
+          if (result.noCapabilities) {
+            setSelected((prev) => {
+              const next = new Set(prev);
+              next.delete(combo.key);
+              return next;
+            });
+          }
           if (result.needsLogin) {
             stopRef.current = true;
             setError(result.error);
@@ -204,6 +298,7 @@ export function CapabilityDiscovery({
   }
 
   const newCount = combos.filter((c) => !registered.has(c.key)).length;
+  const legacyNewCount = combos.filter((c) => !registered.has(c.key) && isLegacyPackage(c)).length;
   const visible = onlyNew
     ? combos.filter((c) => !registered.has(c.key) || rowStatus[c.key])
     : combos;
@@ -212,6 +307,7 @@ export function CapabilityDiscovery({
   ).length;
   const doneCount = Object.values(rowStatus).filter((s) => s.state === "ok").length;
   const failedCount = Object.values(rowStatus).filter((s) => s.state === "error").length;
+  const noCapabilitiesCount = Object.values(rowStatus).filter((s) => s.state === "none").length;
   const busy = phase === "scanning" || phase === "registering";
 
   function toggle(key: string) {
@@ -272,9 +368,14 @@ export function CapabilityDiscovery({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={scan} disabled={busy} className={primaryButtonClass}>
+        <button type="button" onClick={() => scan()} disabled={busy} className={primaryButtonClass}>
           {phase === "idle" ? "Ler base do ACS" : "Ler base novamente"}
         </button>
+        {phase === "scanned" && !scanComplete && pagesRead > 0 && (
+          <button type="button" onClick={() => scan(true)} className={secondaryButtonClass}>
+            Continuar leitura (página {pagesRead + 1})
+          </button>
+        )}
         {busy && (
           <button type="button" onClick={() => (stopRef.current = true)} className={secondaryButtonClass}>
             Parar
@@ -284,6 +385,7 @@ export function CapabilityDiscovery({
           <span className="text-sm text-stone-600 dark:text-slate-400">
             {pagesRead} página(s) · {devicesRead} equipamento(s) lido(s)
             {phase === "scanning" && " — lendo..."}
+            {phase !== "scanning" && pagesRead > 0 && !scanComplete && " — leitura incompleta"}
           </span>
         )}
       </div>
@@ -296,11 +398,12 @@ export function CapabilityDiscovery({
 
       {(phase === "scanned" || phase === "registering") && (
         <>
-          <dl className="grid gap-3 sm:grid-cols-4">
+          <dl className="grid gap-3 sm:grid-cols-5">
             {[
               ["Combinações encontradas", combos.length],
               ["Novas (não registradas)", newCount],
               ["Registradas agora", doneCount],
+              ["Sem capacidades no ACS", noCapabilitiesCount],
               ["Com falha", failedCount],
             ].map(([label, value]) => (
               <div
@@ -329,6 +432,14 @@ export function CapabilityDiscovery({
                 : `Consultar e registrar ${selectedPending} selecionada(s)`}
             </button>
           </div>
+
+          {legacyNewCount > 0 && (
+            <p className="text-sm text-stone-600 dark:text-slate-400">
+              {legacyNewCount} combinação(ões) nova(s) só têm equipamentos com pacote v1/v2 do
+              ACS, que não traz capacidades — ficaram desmarcadas. Marque se quiser consultar
+              mesmo assim.
+            </p>
+          )}
 
           {visible.length === 0 ? (
             <p className="rounded-lg border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500 dark:border-slate-700 dark:text-slate-400">
@@ -392,12 +503,23 @@ export function CapabilityDiscovery({
                             >
                               {status.created ? "Registrado" : "Atualizado"} →
                             </Link>
+                          ) : status?.state === "none" ? (
+                            <span className="text-amber-700 dark:text-amber-400" title={status.message}>
+                              Sem capacidades no ACS
+                            </span>
                           ) : status?.state === "error" ? (
                             <span className="text-red-700 dark:text-red-400">{status.message}</span>
                           ) : isRegistered ? (
                             <span className="text-stone-500 dark:text-slate-400">Já registrado</span>
                           ) : (
-                            <span className="font-medium text-amber-700 dark:text-amber-400">Novo</span>
+                            isLegacyPackage(combo) ? (
+                              <span className="text-stone-500 dark:text-slate-400">
+                                Novo · pacote {combo.packageVersions.join("/")}, provavelmente sem
+                                capacidades no ACS
+                              </span>
+                            ) : (
+                              <span className="font-medium text-amber-700 dark:text-amber-400">Novo</span>
+                            )
                           )}
                         </td>
                       </tr>

@@ -65,7 +65,12 @@ export async function deleteEquipmentCapabilityAction(id: string) {
 // para nenhuma requisição estourar o tempo máximo de execução no Vercel e o
 // progresso aparecer na tela.
 
-export type DiscoveryFailure = { ok: false; error: string; needsLogin?: boolean };
+export type DiscoveryFailure = {
+  ok: false;
+  error: string;
+  needsLogin?: boolean;
+  noCapabilities?: boolean;
+};
 
 export async function connectAcsAction(
   domain: string,
@@ -105,6 +110,13 @@ export async function registerCapabilityBySerialAction(
   if ("ok" in auth) return { ...auth, needsLogin: true };
 
   const result = await fetchAndStoreCapabilities(auth, session.userId, sn);
-  if (!result.ok) return { ok: false, error: result.error, needsLogin: result.sessionRejected };
+  if (!result.ok) {
+    return {
+      ok: false,
+      error: result.error,
+      needsLogin: result.sessionRejected,
+      noCapabilities: result.noCapabilities,
+    };
+  }
   return result;
 }

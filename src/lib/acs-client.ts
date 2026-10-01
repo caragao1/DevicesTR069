@@ -192,7 +192,10 @@ export async function fetchAndStoreCapabilities(
   auth: AcsAuth,
   userId: string,
   serialNumber: string
-): Promise<{ ok: true; id: string; created: boolean } | (Failure & { sessionRejected?: boolean })> {
+): Promise<
+  | { ok: true; id: string; created: boolean }
+  | (Failure & { sessionRejected?: boolean; noCapabilities?: boolean })
+> {
   let capabilitiesResponse: Response;
   try {
     capabilitiesResponse = await fetchWithTimeout(
@@ -227,6 +230,24 @@ export async function fetchAndStoreCapabilities(
   const firmwareVersion = requiredString(data.device?.firmwareVersion);
   const capabilities = data.capabilities;
 
+  // O ACS reconhece o equipamento mas não tem capacidades cadastradas para
+  // esse modelo/firmware: a resposta vem só com "device", sem "capabilities".
+  if (manufacturer && modelName && hardware && firmwareVersion && data.capabilities == null) {
+    const pkg = requiredString(data.device?.packageVersion);
+    return {
+      ok: false,
+      noCapabilities: true,
+      error: `O ACS não tem capacidades cadastradas para ${manufacturer} ${modelName} (hardware ${hardware}, firmware ${firmwareVersion}${pkg ? `, pacote ${pkg}` : ""}).`,
+    };
+  }
+
+  const missing = [
+    !manufacturer && "device.manufacturer",
+    !modelName && "device.modelName",
+    !hardware && "device.hardware",
+    !firmwareVersion && "device.firmwareVersion",
+    (!capabilities || typeof capabilities !== "object") && "capabilities",
+  ].filter(Boolean);
   if (
     !manufacturer ||
     !modelName ||
@@ -235,7 +256,10 @@ export async function fetchAndStoreCapabilities(
     !capabilities ||
     typeof capabilities !== "object"
   ) {
-    return { ok: false, error: "A resposta da API não contém os dados esperados de um equipamento." };
+    return {
+      ok: false,
+      error: `A resposta da API não contém os dados esperados de um equipamento (faltando: ${missing.join(", ")}).`,
+    };
   }
 
   const productClass = requiredString(data.device?.productClass);
@@ -282,6 +306,8 @@ export type DiscoveredDevice = {
   firmwareVersion: string | null;
   online: boolean;
   lastInform: string | null;
+  // versão do pacote do ACS para o modelo (v2, v3...) — só o v3 tem capacidades
+  packageVersion: string | null;
 };
 
 type ListApiResponse = {
@@ -354,6 +380,7 @@ export async function listDevicesPage(
       firmwareVersion: requiredString(info.softwareVersion),
       online: register.status === true,
       lastInform: requiredString(register.lastInform),
+      packageVersion: requiredString(info.packageVersion),
     });
   }
 
