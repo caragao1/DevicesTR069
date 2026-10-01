@@ -58,6 +58,35 @@ function isBetterSerial(device: DiscoveredDevice, combo: Combo): boolean {
   return (device.lastInform ?? "") > (combo.serialLastInform ?? "");
 }
 
+const RETRY_DELAYS_MS = [2000, 5000, 10000];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type ActionFailure = { ok: false; error: string; needsLogin?: boolean; noCapabilities?: boolean };
+type ActionResult = { ok: true } | ActionFailure;
+
+// Chamada a uma server action com novas tentativas. Falha de rede ou timeout
+// (exceção) é sempre repetida; erro devolvido pela API só com retryApiErrors
+// (na listagem, um 5xx do ACS costuma passar; num SN, um 404 não). Sessão
+// recusada nunca é repetida.
+async function withRetry<T extends ActionResult>(
+  call: () => Promise<T>,
+  { retryApiErrors }: { retryApiErrors: boolean }
+): Promise<T | ActionFailure> {
+  let lastError = "Sem resposta do servidor.";
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const result = await call();
+      if (result.ok || result.needsLogin || !retryApiErrors) return result;
+      lastError = result.error;
+    } catch {
+      lastError = "Sem resposta do servidor (falha de rede ou tempo esgotado).";
+    }
+    if (attempt < RETRY_DELAYS_MS.length) await sleep(RETRY_DELAYS_MS[attempt]);
+  }
+  return { ok: false, error: `${lastError} (${RETRY_DELAYS_MS.length + 1} tentativas)` };
+}
+
 export function CapabilityDiscovery({
   initialDomain,
   registeredKeys,
@@ -79,6 +108,7 @@ export function CapabilityDiscovery({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rowStatus, setRowStatus] = useState<Record<string, RowStatus>>({});
   const [onlyNew, setOnlyNew] = useState(true);
+  const [scanComplete, setScanComplete] = useState(false);
   const stopRef = useRef(false);
 
   function needsLogin(message: string) {
@@ -102,42 +132,80 @@ export function CapabilityDiscovery({
     else setConnectError(result.error);
   }
 
-  async function scan() {
+  // Estado da varredura fora do React: sobrevive a uma interrupção, para
+  // "Continuar leitura" retomar da página seguinte sem perder o que foi lido.
+  const scanRef = useRef({
+    byKey: new Map<string, Combo>(),
+    missing: [] as DiscoveredDevice[],
+    seen: new Set<string>(),
+    total: 0,
+    nextPage: 1,
+  });
+
+  function publishScan() {
+    const { byKey, missing } = scanRef.current;
+    const list = [...byKey.values()].sort(
+      (a, b) =>
+        a.manufacturer.localeCompare(b.manufacturer) ||
+        a.modelName.localeCompare(b.modelName) ||
+        a.hardware.localeCompare(b.hardware) ||
+        a.firmwareVersion.localeCompare(b.firmwareVersion)
+    );
+    setCombos(list);
+    setIncomplete([...missing]);
+    setSelected(
+      new Set(
+        list.filter((c) => !registered.has(c.key) && !isLegacyPackage(c)).map((c) => c.key)
+      )
+    );
+  }
+
+  async function scan(resume = false) {
     stopRef.current = false;
     setPhase("scanning");
     setError(null);
-    setPagesRead(0);
-    setDevicesRead(0);
-    setRowStatus({});
+    if (!resume) {
+      scanRef.current = {
+        byKey: new Map(),
+        missing: [],
+        seen: new Set(),
+        total: 0,
+        nextPage: 1,
+      };
+      setScanComplete(false);
+      setPagesRead(0);
+      setDevicesRead(0);
+      setRowStatus({});
+    }
+    const state = scanRef.current;
 
-    const byKey = new Map<string, Combo>();
-    const missing: DiscoveredDevice[] = [];
-    const seen = new Set<string>();
-    let total = 0;
-
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      if (stopRef.current) break;
-      const result = await discoverDevicesPageAction(page);
+    while (state.nextPage <= MAX_PAGES && !stopRef.current) {
+      const page = state.nextPage;
+      const result = await withRetry(() => discoverDevicesPageAction(page), {
+        retryApiErrors: true,
+      });
       if (!result.ok) {
-        setError(result.error);
+        setError(
+          `Leitura interrompida na página ${page}: ${result.error} Os ${state.total} equipamentos já lidos foram mantidos — use "Continuar leitura" para retomar dessa página.`
+        );
         if (result.needsLogin) needsLogin(result.error);
         break;
       }
 
       let fresh = 0;
       for (const device of result.devices) {
-        if (seen.has(device.serialNumber)) continue;
-        seen.add(device.serialNumber);
+        if (state.seen.has(device.serialNumber)) continue;
+        state.seen.add(device.serialNumber);
         fresh++;
         const { manufacturer, modelName, hardware, firmwareVersion } = device;
         if (!manufacturer || !modelName || !hardware || !firmwareVersion) {
-          missing.push(device);
+          state.missing.push(device);
           continue;
         }
         const key = capabilityKey({ manufacturer, modelName, hardware, firmwareVersion });
-        const combo = byKey.get(key);
+        const combo = state.byKey.get(key);
         if (!combo) {
-          byKey.set(key, {
+          state.byKey.set(key, {
             key,
             manufacturer,
             modelName,
@@ -164,27 +232,18 @@ export function CapabilityDiscovery({
         }
       }
 
-      total += fresh;
+      state.total += fresh;
+      state.nextPage = page + 1;
       setPagesRead(page);
-      setDevicesRead(total);
+      setDevicesRead(state.total);
       // Página só com SNs já vistos: a API está repetindo — evita laço infinito.
-      if (!result.hasNextPage || (result.devices.length > 0 && fresh === 0)) break;
+      if (!result.hasNextPage || (result.devices.length > 0 && fresh === 0)) {
+        setScanComplete(true);
+        break;
+      }
     }
 
-    const list = [...byKey.values()].sort(
-      (a, b) =>
-        a.manufacturer.localeCompare(b.manufacturer) ||
-        a.modelName.localeCompare(b.modelName) ||
-        a.hardware.localeCompare(b.hardware) ||
-        a.firmwareVersion.localeCompare(b.firmwareVersion)
-    );
-    setCombos(list);
-    setIncomplete(missing);
-    setSelected(
-      new Set(
-        list.filter((c) => !registered.has(c.key) && !isLegacyPackage(c)).map((c) => c.key)
-      )
-    );
+    publishScan();
     setPhase("scanned");
   }
 
@@ -200,7 +259,10 @@ export function CapabilityDiscovery({
       while (queue.length && !stopRef.current) {
         const combo = queue.shift()!;
         setRowStatus((prev) => ({ ...prev, [combo.key]: { state: "running" } }));
-        const result = await registerCapabilityBySerialAction(combo.serialNumber);
+        const result = await withRetry(
+          () => registerCapabilityBySerialAction(combo.serialNumber),
+          { retryApiErrors: false }
+        );
         if (result.ok) {
           setRowStatus((prev) => ({
             ...prev,
@@ -306,9 +368,14 @@ export function CapabilityDiscovery({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={scan} disabled={busy} className={primaryButtonClass}>
+        <button type="button" onClick={() => scan()} disabled={busy} className={primaryButtonClass}>
           {phase === "idle" ? "Ler base do ACS" : "Ler base novamente"}
         </button>
+        {phase === "scanned" && !scanComplete && pagesRead > 0 && (
+          <button type="button" onClick={() => scan(true)} className={secondaryButtonClass}>
+            Continuar leitura (página {pagesRead + 1})
+          </button>
+        )}
         {busy && (
           <button type="button" onClick={() => (stopRef.current = true)} className={secondaryButtonClass}>
             Parar
@@ -318,6 +385,7 @@ export function CapabilityDiscovery({
           <span className="text-sm text-stone-600 dark:text-slate-400">
             {pagesRead} página(s) · {devicesRead} equipamento(s) lido(s)
             {phase === "scanning" && " — lendo..."}
+            {phase !== "scanning" && pagesRead > 0 && !scanComplete && " — leitura incompleta"}
           </span>
         )}
       </div>
