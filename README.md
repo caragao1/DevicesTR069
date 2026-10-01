@@ -29,6 +29,18 @@ workarounds e o status de cada uma.
   sessão do navegador) e gerar um relatório em PDF, via impressão do
   navegador, com o resumo de todos eles. Consulta pública; registrar
   exige login (qualquer cargo). O client_secret nunca é armazenado.
+- **Scripts ACS** (`/scripts`): biblioteca de scripts de operação em massa
+  no ACS, colados no console do navegador com o painel do ACS aberto e
+  logado (usam o cookie de sessão da aba; a aplicação não chama o ACS). Um
+  script pode ser colado à mão ou montado pelo assistente, que gera três
+  operações a partir de um CSV de serial numbers: **setar parâmetros**
+  (tabela caminho/valor/tipo, um PATCH por parâmetro com pausa entre eles),
+  **reapontar a URL do ACS** (`ManagementServer.URL`, com filtro pela URL
+  atual) e **excluir dispositivos**. Todos saem com `DRY_RUN` ligado por
+  padrão. Scripts do assistente guardam a configuração e podem ser reabertos
+  e editados no formulário; há pré-visualização do CSV (separador, coluna e
+  quantidade de SNs) e botões de copiar/baixar. Exige login (qualquer
+  cargo); excluir um script da biblioteca exige Administrador.
 - Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
   fabricantes e limitações) e **Administrador** (também pode excluir
   qualquer informação e gerenciar usuários em `/usuarios`). Excluir
@@ -122,7 +134,7 @@ schema) são aplicadas automaticamente a cada build.
 
 ```
 prisma/
-  schema.prisma       # modelos: User, DeviceModel, Limitation
+  schema.prisma       # modelos: User, DeviceModel, Limitation, Script, ...
   seed.ts              # cria usuário admin + modelos de exemplo
 src/
   app/                 # rotas (App Router)
@@ -132,6 +144,7 @@ src/
     prisma.ts          # cliente Prisma singleton
     session.ts          # sessão (cookie httpOnly assinado)
     constants.ts        # categorias, severidades e status disponíveis
+    script-generator.ts # monta os scripts do assistente (Scripts ACS)
   proxy.ts              # equivalente ao middleware.ts (Next.js 16),
                          # protege todas as rotas exceto /login
 ```

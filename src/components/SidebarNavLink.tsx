@@ -10,6 +10,7 @@ export function SidebarNavLink({
   label,
   exact = [],
   prefixes = [],
+  excludePrefixes = [],
 }: {
   href: string;
   icon: ReactNode;
@@ -20,12 +21,15 @@ export function SidebarNavLink({
   // Component (Sidebar).
   exact?: string[];
   prefixes?: string[];
+  // Caminhos que casam com `prefixes` mas pertencem a outro item do menu
+  excludePrefixes?: string[];
 }) {
   const pathname = usePathname();
   const active =
     pathname === href ||
     exact.includes(pathname) ||
-    prefixes.some((prefix) => pathname.startsWith(prefix));
+    (prefixes.some((prefix) => pathname.startsWith(prefix)) &&
+      !excludePrefixes.some((prefix) => pathname.startsWith(prefix)));
 
   return (
     <Link

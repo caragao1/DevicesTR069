@@ -118,3 +118,11 @@ export function ExternalLinkIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function CodeIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
+    </svg>
+  );
+}
