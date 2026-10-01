@@ -227,6 +227,13 @@ export async function fetchAndStoreCapabilities(
   const firmwareVersion = requiredString(data.device?.firmwareVersion);
   const capabilities = data.capabilities;
 
+  const missing = [
+    !manufacturer && "device.manufacturer",
+    !modelName && "device.modelName",
+    !hardware && "device.hardware",
+    !firmwareVersion && "device.firmwareVersion",
+    (!capabilities || typeof capabilities !== "object") && "capabilities",
+  ].filter(Boolean);
   if (
     !manufacturer ||
     !modelName ||
@@ -235,7 +242,10 @@ export async function fetchAndStoreCapabilities(
     !capabilities ||
     typeof capabilities !== "object"
   ) {
-    return { ok: false, error: "A resposta da API não contém os dados esperados de um equipamento." };
+    return {
+      ok: false,
+      error: `A resposta da API não contém os dados esperados de um equipamento (faltando: ${missing.join(", ")}).`,
+    };
   }
 
   const productClass = requiredString(data.device?.productClass);
