@@ -22,6 +22,7 @@ model User {
   createdAt      DateTime  @default(now())
 
   acsSession AcsSession?
+  scripts    Script[]
 }
 
 model DeviceModel {
@@ -96,4 +97,24 @@ model AcsSession {
   expiresAt            DateTime
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+}
+
+// Biblioteca de scripts de operação em massa no ACS (colados no console do
+// painel). operation: SET_PARAMS | SET_URL | DELETE | OUTRO (ver
+// src/lib/script-constants.ts). Quando o script vem do gerador, config guarda
+// os campos do formulário, para reabrir e editar no gerador; scripts colados
+// à mão ficam com config nulo e são editados direto no código.
+model Script {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  operation   String
+  code        String
+  config      Json?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([operation])
 }

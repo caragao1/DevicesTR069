@@ -5,6 +5,7 @@ import { logoutAction } from "@/lib/actions/auth";
 import {
   BrandIcon,
   ChecklistIcon,
+  CodeIcon,
   CpeIcon,
   OltIcon,
   PlusIcon,
@@ -93,6 +94,26 @@ export async function Sidebar({
           />
         )}
       </div>
+
+      {session && (
+        <div className="mt-3 flex flex-col gap-0.5 border-t border-slate-800 px-4 pb-2 pt-5">
+          <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Scripts ACS
+          </div>
+          <SidebarNavLink
+            href="/scripts"
+            icon={<CodeIcon className="h-[17px] w-[17px]" />}
+            label="Biblioteca de scripts"
+            prefixes={["/scripts/"]}
+            excludePrefixes={["/scripts/new"]}
+          />
+          <SidebarNavLink
+            href="/scripts/new"
+            icon={<PlusIcon className="h-[17px] w-[17px]" />}
+            label="Novo script"
+          />
+        </div>
+      )}
 
       {session?.role === "ADMIN" && (
         <div className="mt-3 flex flex-col gap-0.5 border-t border-slate-800 px-4 pb-2 pt-5">
