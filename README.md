@@ -29,6 +29,16 @@ workarounds e o status de cada uma.
   sessão do navegador) e gerar um relatório em PDF, via impressão do
   navegador, com o resumo de todos eles. Consulta pública; registrar
   exige login (qualquer cargo). O client_secret nunca é armazenado.
+- **Descobrir na base do ACS** (`/capacidades/descobrir`): em vez de
+  registrar equipamento por equipamento, lê toda a base do ACS
+  (`/api/v2/devices/views/natural`, 50 por página), agrupa por fabricante,
+  modelo, hardware e firmware e consulta as capacidades de um SN por
+  combinação ainda não registrada (de preferência online e com inform mais
+  recente). A varredura e os registros são feitos passo a passo pelo
+  navegador, com progresso na tela, para nenhuma requisição estourar o tempo
+  máximo de execução do Vercel. Da listagem só saem do servidor fabricante,
+  modelo, hardware, firmware, SN, status e último inform — dados de cliente
+  (Wi-Fi, PPPoE, CPF) não são repassados nem armazenados. Exige login.
 - **Scripts ACS** (`/scripts`): biblioteca de scripts de operação em massa
   no ACS, colados no console do navegador com o painel do ACS aberto e
   logado (usam o cookie de sessão da aba; a aplicação não chama o ACS). Um

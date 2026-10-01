@@ -20,8 +20,9 @@ function isPublicReadPath(pathname: string): boolean {
   if (pathname.startsWith("/capacidades/registro/")) return true;
   if (
     pathname.startsWith("/capacidades/") &&
-    pathname !== "/capacidades/registrar" &&
-    !pathname.startsWith("/capacidades/registrar/")
+    !["/capacidades/registrar", "/capacidades/descobrir"].some(
+      (restricted) => pathname === restricted || pathname.startsWith(`${restricted}/`)
+    )
   ) {
     return true;
   }
