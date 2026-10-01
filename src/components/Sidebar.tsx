@@ -27,7 +27,7 @@ export async function Sidebar({
   });
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col bg-slate-900 py-7">
+    <aside className="flex h-full w-64 shrink-0 flex-col overflow-y-auto bg-slate-900 py-7">
       <Link
         href="/"
         className="flex flex-col gap-0.5 border-b border-slate-800 px-6 pb-6"

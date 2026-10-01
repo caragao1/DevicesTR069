@@ -35,7 +35,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="flex min-h-full font-sans text-stone-900 dark:text-stone-50 print:block">
-        <div className="print:hidden">
+        {/* Menu fixo na altura da tela: acompanha a rolagem da página e
+            rola sozinho se os itens não couberem */}
+        <div className="sticky top-0 h-screen shrink-0 self-start print:hidden">
           <Sidebar session={session} />
         </div>
         <div className="flex min-h-screen flex-1 flex-col bg-stone-50 dark:bg-slate-950 print:block print:min-h-0 print:bg-white">
