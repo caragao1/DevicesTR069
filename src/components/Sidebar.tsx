@@ -9,6 +9,7 @@ import {
   CpeIcon,
   OltIcon,
   PlusIcon,
+  SearchIcon,
   UsersIcon,
 } from "@/components/icons";
 import { ManufacturerLink } from "@/components/ManufacturerLink";
@@ -91,6 +92,13 @@ export async function Sidebar({
             href="/capacidades/registrar"
             icon={<PlusIcon className="h-[17px] w-[17px]" />}
             label="Registrar equipamento"
+          />
+        )}
+        {session && (
+          <SidebarNavLink
+            href="/capacidades/descobrir"
+            icon={<SearchIcon className="h-[17px] w-[17px]" />}
+            label="Descobrir na base do ACS"
           />
         )}
       </div>
