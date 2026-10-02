@@ -73,13 +73,15 @@ export function summarizeCapabilities(
 
   if (isPlainObject(capabilities.PortForward)) {
     const pf = capabilities.PortForward;
+    // setBothProtocols (regra TCP+UDP numa só) não decide se o
+    // redirecionamento funciona — sem ele dá para criar uma regra por
+    // protocolo; por isso fica fora do critério (segue visível no detalhe).
     const ok = [
       "createRule",
       "enableRule",
       "setInternalIp",
       "setInternalPort",
       "setExternalPort",
-      "setBothProtocols",
     ].every((k) => pf[k] === true);
     push("PortForward", "Redirecionamento de porta", [
       { label: "Redirecionamento de porta", supported: ok },
