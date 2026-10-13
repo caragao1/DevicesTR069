@@ -1,0 +1,12 @@
+ont-lineprofile gpon profile-id {{ id }} profile-name {{ nome }}
+{% for t in tconts %}
+tcont {{ t.tcont }} dba-profile-id {{ t.dba_profile_id }}
+{% endfor %}
+{% for g in gems %}
+gem add {{ g.gem }} tcont {{ g.tcont }}
+{% endfor %}
+{% for m in mapeamentos %}
+gem mapping {{ m.gem }} {{ m.indice }} {{ m.regra }}
+{% endfor %}
+commit
+exit

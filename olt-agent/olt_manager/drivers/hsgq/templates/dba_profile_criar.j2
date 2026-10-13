@@ -1,0 +1,2 @@
+dba-profile add profile-id {{ id }} profile-name {{ nome }} {% if tipo == "type1" %}type1 fix {{ fix }}{% elif tipo == "type2" %}type2 assure {{ assure }}{% elif tipo == "type3" %}type3 assure {{ assure }} max {{ max }}{% elif tipo == "type4" %}type4 max {{ max }}{% else %}type5 fix {{ fix }} assure {{ assure }} max {{ max }}{% endif %}
+

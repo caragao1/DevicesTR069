@@ -1,0 +1,3 @@
+  Aging time of the automatically found ONTs:300(s)
+
+  Interval of automatically finding ONT(Only for GPON): 8(s)

@@ -52,15 +52,28 @@ export async function Sidebar({
           label="CPE / ONT"
           prefixes={["/fabricantes/", "/models/", "/limitations/"]}
         />
-        <div className="flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-slate-500">
-          <span className="flex items-center gap-2.5 text-sm">
-            <OltIcon className="h-[17px] w-[17px]" />
-            OLT
-          </span>
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
-            em breve
-          </span>
-        </div>
+        {session ? (
+          <SidebarNavLink
+            href="/olts"
+            icon={<OltIcon className="h-[17px] w-[17px]" />}
+            label="OLT"
+            prefixes={["/olts/"]}
+          />
+        ) : (
+          // As telas de OLT exigem login (expõem dados de clientes e equipamentos)
+          <Link
+            href="/login?next=%2Folts"
+            className="flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-stone-50"
+          >
+            <span className="flex items-center gap-2.5">
+              <OltIcon className="h-[17px] w-[17px]" />
+              OLT
+            </span>
+            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+              requer login
+            </span>
+          </Link>
+        )}
       </nav>
 
       {manufacturers.length > 0 && (

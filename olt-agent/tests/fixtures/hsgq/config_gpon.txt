@@ -1,0 +1,14 @@
+!!GPON Configuration
+gemport-mode single
+interface gpon 1
+port ont-autofind enable
+splitter add 1 parent 0 name "root" desc "The root splitter of PON01"
+ont add 0 sn-auth 58504f4e5259fb4e omci ont-lineprofile-id 0 ont-srvprofile-id 0 
+ont wanconfig add 0 connection-type internet vlan tag 2002  ipmode pppoe teste.ixcsoft 123 lan_eth 1-4 lan_ssid 1-4 lan_ssid5g 1-4 ipprotocol ipv46 
+ont wan-remoteconfig 0 http enable 9090 
+exit
+interface gpon 2
+ont authorize auto ont-lineprofile-id 0 ont-srvprofile-id 0
+port ont-autofind enable
+splitter add 1 parent 0 name "root" desc "The root splitter of PON02"
+exit

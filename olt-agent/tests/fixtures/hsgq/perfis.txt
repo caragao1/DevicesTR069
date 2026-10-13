@@ -1,0 +1,37 @@
+dba-profile add profile-id 10 profile-name 100M type4 max 100000
+dba-profile add profile-id 11 profile-name 500M type4 max 500000
+!TR069 Config Profile
+!
+ont-tr069-profile add profile-id 1 profile-name ACS url http://ixcacs.com.br/tr069 user ixc password ixc 
+!!
+!ONT Traffic Config Profile
+!!
+ont-lineprofile gpon profile-id 0 profile-name default
+ tcont 1 dba-profile-id 3
+ gem add 1 tcont 1
+ gem mapping 1 1 vlan transparent
+ commit
+ exit
+ont-lineprofile gpon profile-id 100 profile-name 100M
+ tcont 1 dba-profile-id 10
+ gem add 1 tcont 1
+ gem mapping 1 1 vlan transparent
+ commit
+ exit
+ont-srvprofile gpon profile-id 0 profile-name srvprofile_default_0
+ ont-port eth adaptive
+ igmp-version v2
+ port vlan eth 1 transparent
+ commit
+ exit
+!Voice Config Profile
+ont-sipprofile gpon profile-id 0 profile-name ISSABEL
+ sipagent proxy-server 192.168.20.20 proxy-server-port 5060 outbound-server 192.168.20.20 outbound-server-port 5060 registrar-server 192.168.20.20 domain 192.168.20.20 
+ faxmode t38
+ commit
+ exit
+ont-sipprofile gpon profile-id 1 profile-name issabel
+ sipagent proxy-server 10.10.10.10 proxy-server-port 5060 outbound-server 10.10.10.10 outbound-server-port 5060 registrar-server 10.10.10.10 domain 10.10.10.10 
+ commit
+ exit
+!!
