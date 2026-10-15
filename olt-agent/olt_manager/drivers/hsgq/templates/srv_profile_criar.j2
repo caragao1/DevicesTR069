@@ -1,0 +1,7 @@
+ont-srvprofile gpon profile-id {{ id }} profile-name {{ nome }}
+ont-port eth {{ ont_port_eth or "adaptive" }}
+{% for p in portas_vlan or [] %}
+port vlan eth {{ p.porta }} {{ p.regra }}
+{% endfor %}
+commit
+exit

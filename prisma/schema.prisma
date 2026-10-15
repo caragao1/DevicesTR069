@@ -21,8 +21,9 @@ model User {
   lockedUntil    DateTime?
   createdAt      DateTime  @default(now())
 
-  acsSession AcsSession?
-  scripts    Script[]
+  acsSession   AcsSession?
+  scripts      Script[]
+  oltOperacoes OltOperacao[]
 }
 
 model DeviceModel {
@@ -117,4 +118,89 @@ model Script {
   updatedAt   DateTime @updatedAt
 
   @@index([operation])
+}
+
+// OLTs gerenciadas pela aba OLT. Os comandos são executados pelo agente
+// Python (olt-agent/), que roda dentro da rede das OLTs; aqui fica o
+// cadastro, as coletas de monitoramento e o histórico de operações.
+// protocolo: ssh | telnet. driver: chave de um driver do agente (hsgq, demo...).
+// A senha nunca é guardada em texto puro (ver src/lib/crypto.ts).
+model Olt {
+  id             String   @id @default(cuid())
+  nome           String   @unique
+  driver         String
+  modelo         String?
+  host           String
+  protocolo      String   @default("ssh")
+  porta          Int      @default(22)
+  usuario        String
+  senhaEncrypted String
+  localizacao    String?
+  observacoes    String?
+  monitorar      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  coletas   OltColeta[]
+  operacoes OltOperacao[]
+}
+
+// Retrato do estado das ONUs de uma OLT num momento (coleta periódica ou
+// manual). Alimenta o painel e o histórico de sinal de cada ONU.
+model OltColeta {
+  id           String   @id @default(cuid())
+  oltId        String
+  olt          Olt      @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  sucesso      Boolean  @default(false)
+  erro         String?
+  total        Int      @default(0)
+  online       Int      @default(0)
+  sinalCritico Int      @default(0)
+  pendentes    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  leituras OltLeituraOnu[]
+
+  @@index([oltId, createdAt])
+}
+
+model OltLeituraOnu {
+  id           String    @id @default(cuid())
+  coletaId     String
+  coleta       OltColeta @relation(fields: [coletaId], references: [id], onDelete: Cascade)
+  pon          Int
+  onuId        Int
+  sn           String
+  nome         String?
+  online       Boolean
+  ultimaQueda  String?
+  rxDbm        Float?
+  txDbm        Float?
+  oltRxDbm     Float?
+  temperaturaC Float?
+  // bom | alerta | critico | forte | offline | sem-leitura (classificado pelo agente)
+  classeSinal  String?
+
+  @@index([coletaId])
+  @@index([pon, onuId])
+}
+
+// Tudo que foi enviado às OLTs (comandos com senhas mascaradas pelo agente).
+// acao: autorizar | desautorizar | reiniciar | criar | remover | script
+model OltOperacao {
+  id        String   @id @default(cuid())
+  oltId     String
+  olt       Olt      @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acao      String
+  recurso   String?
+  alvo      String?
+  comandos  String
+  saidas    String?
+  sucesso   Boolean
+  erro      String?
+  createdAt DateTime @default(now())
+
+  @@index([oltId, createdAt])
 }

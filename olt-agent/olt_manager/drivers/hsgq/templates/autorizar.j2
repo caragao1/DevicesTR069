@@ -1,0 +1,24 @@
+interface gpon {{ pon }}
+ont add {{ onu_id }} sn-auth {{ sn_hex }} omci ont-lineprofile-id {{ line_profile_id }} ont-srvprofile-id {{ srv_profile_id }}
+{% if nome %}
+ont setting {{ onu_id }} name {{ nome }}{% if descricao %} desc {{ descricao }}{% endif %}
+
+{% endif %}
+{% if wan_modo == "pppoe" %}
+ont wanconfig add {{ onu_id }} connection-type internet vlan tag {{ vlan }} ipmode pppoe {{ pppoe_usuario }} {{ pppoe_senha }} lan_eth {{ lan_eth | default("1-4") }} lan_ssid {{ lan_ssid | default("1-4") }} lan_ssid5g {{ lan_ssid5g | default("1-4") }} ipprotocol {{ ipprotocol | default("ipv46") }}
+{% elif wan_modo == "dhcp" %}
+ont wanconfig add {{ onu_id }} connection-type internet vlan tag {{ vlan }} ipmode dhcp lan_eth {{ lan_eth | default("1-4") }} lan_ssid {{ lan_ssid | default("1-4") }} lan_ssid5g {{ lan_ssid5g | default("1-4") }} ipprotocol {{ ipprotocol | default("ipv46") }}
+{% elif wan_modo == "bridge" %}
+ont port native-vlan {{ onu_id }} eth {{ bridge_porta | default(1) }} vlan {{ vlan }}
+{% endif %}
+{% if wifi_24_ssid %}
+ont wlanconfig {{ onu_id }} 2_4g {{ wifi_24_ssid }} wpa2 {{ wifi_senha }}{% if wifi_5_ssid %} 5g {{ wifi_5_ssid }} wpa2 {{ wifi_senha }}{% endif %}
+
+{% endif %}
+{% if tr069_profile_id %}
+ont tr069-profile {{ onu_id }} profile-id {{ tr069_profile_id }}
+{% endif %}
+{% if acesso_remoto_http %}
+ont wan-remoteconfig {{ onu_id }} http enable {{ acesso_remoto_http }}
+{% endif %}
+exit

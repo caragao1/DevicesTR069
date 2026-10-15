@@ -1,0 +1,27 @@
+----------------------------------------------------------------------------------------------------
+ PON ID                        : 1
+ ONU ID                        : 1
+ ONU SN                        : 58504f4e6a7b8c9d(XPON6a7b8c9d)
+ ONU Password                  : ()
+ Loid                          : 
+ Loid Password                 : 
+ Vendor ID                     : HSGQ
+ ONT Version                   : 7DQ7B2
+ ONT SoftwareVersion           : V3.2.0R01-6601
+ ONT EquipmentID               : HSGQ-X410AX
+ ONT OMCC Version              : 0x80
+ ONT Autofind time             : 2026/10/15 08:39:06
+----------------------------------------------------------------------------------------------------
+ PON ID                        : 2
+ ONU ID                        : 1
+ ONU SN                        : 485754435e6f7a8b(HWTC5e6f7a8b)
+ ONU Password                  : ()
+ Loid                          : 
+ Loid Password                 : 
+ Vendor ID                     : HWTC
+ ONT Version                   : 10C7.A
+ ONT SoftwareVersion           : V5R019C10S125
+ ONT EquipmentID               : EG8145V5
+ ONT OMCC Version              : 0xA0
+ ONT Autofind time             : 2026/10/15 08:41:12
+----------------------------------------------------------------------------------------------------

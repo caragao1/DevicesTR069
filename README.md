@@ -51,6 +51,18 @@ workarounds e o status de cada uma.
   e editados no formulário; há pré-visualização do CSV (separador, coluna e
   quantidade de SNs) e botões de copiar/baixar. Exige login (qualquer
   cargo); excluir um script da biblioteca exige Administrador.
+- **OLT** (`/olts`): cadastro de OLTs GPON (SSH ou Telnet, IP, porta,
+  credenciais criptografadas) e gerenciamento pela interface: painel com ONUs
+  online/offline, sinal crítico e pendentes; lista de ONUs com sinal óptico;
+  detalhe da ONU com histórico de sinal, reinício e desautorização; autorização
+  guiada das ONUs pendentes; criação e remoção de perfis (DBA, line, service,
+  traffic, TR-069); script/CLI; e histórico de tudo que foi executado. Toda
+  escrita mostra antes uma prévia dos comandos. Cada tela explica o que é o
+  recurso e cada campo. Os comandos são executados pelo **agente de OLTs**
+  (`olt-agent/`, Python), que precisa rodar dentro da rede das OLTs — veja
+  [olt-agent/README.md](olt-agent/README.md). Exige login: Membro opera
+  (autorizar, perfis, reiniciar); cadastro de OLTs e Script/CLI exigem
+  Administrador.
 - Dois cargos de usuário: **Membro** (pode adicionar e editar modelos,
   fabricantes e limitações) e **Administrador** (também pode excluir
   qualquer informação e gerenciar usuários em `/usuarios`). Excluir
@@ -105,6 +117,10 @@ Veja `.env.example`:
 | `ADMIN_EMAIL`    | E-mail do usuário administrador criado pelo seed.                          |
 | `ADMIN_PASSWORD` | Senha do usuário administrador criado pelo seed.                           |
 | `ACS_TOKEN_ENCRYPTION_KEY` | Chave de 32 bytes (base64) para criptografar o bearer token do ACS salvo em "Capacidades de equipamentos". Gere com `openssl rand -base64 32`. |
+| `OLT_AGENT_URL` | Endereço do agente de OLTs (padrão `http://127.0.0.1:8770`). |
+| `OLT_AGENT_TOKEN` | Token compartilhado com o agente de OLTs (`openssl rand -hex 32`). |
+| `OLT_CRON_TOKEN` | Token exigido por `POST /api/olts/coletar` (coleta periódica). |
+| `OLT_COLETA_DIAS` | Dias de histórico de coletas mantidos (padrão 30; 0 = não apagar). |
 
 ## Deploy no Vercel
 
@@ -143,11 +159,30 @@ Não precisa de CLI — dá pra fazer tudo pelo dashboard:
 A partir do segundo deploy em diante, novas migrations (se você alterar o
 schema) são aplicadas automaticamente a cada build.
 
+## Aba OLT: agente e coleta periódica
+
+A aba OLT precisa alcançar as OLTs, que ficam numa rede privada. Por isso os
+comandos saem do **agente de OLTs** (`olt-agent/`), um serviço Python que roda
+num servidor dessa rede. A aplicação conversa com ele por HTTP com token; as
+senhas das OLTs ficam criptografadas no banco (mesma chave
+`ACS_TOKEN_ENCRYPTION_KEY`) e só são enviadas ao agente na hora de cada operação.
+
+1. Suba o agente seguindo [olt-agent/README.md](olt-agent/README.md).
+2. Configure `OLT_AGENT_URL` e `OLT_AGENT_TOKEN` na aplicação.
+3. Agende a coleta que alimenta o painel e o histórico de sinal, por exemplo a
+   cada 5 minutos:
+   ```bash
+   */5 * * * * curl -s -X POST -H "Authorization: Bearer $OLT_CRON_TOKEN" http://localhost:3000/api/olts/coletar
+   ```
+
+Para conhecer sem equipamento, cadastre uma OLT com o driver **Demonstração**.
+
 ## Estrutura do projeto
 
 ```
+olt-agent/            # agente Python que executa os comandos nas OLTs (ver README dele)
 prisma/
-  schema.prisma       # modelos: User, DeviceModel, Limitation, Script, ...
+  schema.prisma       # modelos: User, DeviceModel, Limitation, Script, Olt, ...
   seed.ts              # cria usuário admin + modelos de exemplo
 src/
   app/                 # rotas (App Router)
@@ -158,6 +193,7 @@ src/
     session.ts          # sessão (cookie httpOnly assinado)
     constants.ts        # categorias, severidades e status disponíveis
     script-generator.ts # monta os scripts do assistente (Scripts ACS)
+    olt/                # cliente do agente de OLTs, coleta e formulários da aba OLT
   proxy.ts              # equivalente ao middleware.ts (Next.js 16),
                          # protege todas as rotas exceto /login
 ```
