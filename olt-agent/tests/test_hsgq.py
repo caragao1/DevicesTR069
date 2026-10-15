@@ -54,6 +54,14 @@ class TestParsers(unittest.TestCase):
     def test_autofind_sem_pendentes(self):
         self.assertEqual(parsers.parse_ont_autofind(ler("autofind_sem_pendentes.txt")), [])
 
+    def test_autofind_em_blocos_da_hsgq(self):
+        pendentes = parsers.parse_ont_autofind(ler("autofind_blocos.txt"))
+        self.assertEqual(len(pendentes), 1)
+        p = pendentes[0]
+        self.assertEqual((p["pon"], p["indice"], p["sn"], p["sn_hex"]), (1, 1, "XPON5259fb4e", "58504f4e5259fb4e"))
+        self.assertEqual((p["fabricante"], p["modelo"], p["firmware"]), ("HSGQ", "HSGQ-X410AX", "V3.2.0R01-6601"))
+        self.assertFalse(any("senha" in k or "password" in k for k in p))
+
     def test_autofind_vazio(self):
         self.assertEqual(parsers.parse_ont_autofind(ler("autofind_vazio.txt")), [])
 

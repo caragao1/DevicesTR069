@@ -122,9 +122,55 @@ def parse_ont_optical(texto):
     return resultado
 
 
+# Campos do autofind em blocos ("ONU SN : ...") -> chave usada pelo sistema
+CAMPOS_AUTOFIND = {
+    "pon id": "pon",
+    "onu id": "indice",
+    "onu sn": "sn",
+    "loid": "loid",
+    "vendor id": "fabricante",
+    "ont equipmentid": "modelo",
+    "ont version": "hardware",
+    "ont softwareversion": "firmware",
+    "ont autofind time": "detectada_em",
+}
+SN_COM_HEX = re.compile(r"^([0-9a-fA-F]{16})\((\S+)\)$")
+
+
+def _autofind_em_blocos(texto):
+    """Formato da HSGQ G02: um bloco "campo : valor" por ONU, entre linhas de traços."""
+    pendentes, atual = [], {}
+    for linha in limpar(texto).split("\n"):
+        if SEP.match(linha.strip()):
+            if atual:
+                pendentes.append(atual)
+            atual = {}
+            continue
+        if ":" not in linha:
+            continue
+        chave, valor = (p.strip() for p in linha.split(":", 1))
+        nome = CAMPOS_AUTOFIND.get(chave.lower())
+        if not nome:
+            continue  # senhas (ONU/LOID password) e campos técnicos ficam de fora
+        if nome == "sn":
+            m = SN_COM_HEX.match(valor)
+            if m:
+                atual["sn_hex"], valor = m.group(1).lower(), m.group(2)
+        if nome in ("pon", "indice") and valor.isdigit():
+            valor = int(valor)
+        if valor != "":
+            atual[nome] = valor
+    if atual:
+        pendentes.append(atual)
+    return [p for p in pendentes if "sn" in p]
+
+
 def parse_ont_autofind(texto):
     if NO_AUTOFIND in texto:
         return []
+    if re.search(r"(?im)^\s*ONU SN\s*:", limpar(texto)):
+        return _autofind_em_blocos(texto)
+    # firmwares que listam em tabela de colunas
     pendentes = []
     for reg in _tabela_largura_fixa(texto):
         pendentes.append(

@@ -14,7 +14,17 @@ export default async function PendentesPage({ params, searchParams }: PageProps<
   const { dados, erro } = await lerOlt<{ pendentes: Pendente[] }>(olt, "/pendentes");
   const pendentes = dados?.pendentes ?? [];
   // A tabela do autofind muda de firmware para firmware: mostra as colunas que vierem.
-  const colunas = [...new Set(pendentes.flatMap((p) => Object.keys(p)))].filter((c) => c !== "pon" && c !== "sn");
+  const rotulos: Record<string, string> = {
+    modelo: "Modelo",
+    fabricante: "Fabricante",
+    firmware: "Firmware",
+    hardware: "Hardware",
+    loid: "LOID",
+    detectada_em: "Detectada em",
+  };
+  const presentes = [...new Set(pendentes.flatMap((p) => Object.keys(p)))].filter((c) => !["pon", "sn", "sn_hex", "indice"].includes(c));
+  // campos conhecidos primeiro, com nome legível; o que o firmware trouxer a mais vem depois, como veio
+  const colunas = [...Object.keys(rotulos).filter((c) => presentes.includes(c)), ...presentes.filter((c) => !(c in rotulos))];
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +50,7 @@ export default async function PendentesPage({ params, searchParams }: PageProps<
                   <th className={tabela.th}>Serial</th>
                   {colunas.map((c) => (
                     <th key={c} className={tabela.th}>
-                      {c.replace(/_/g, " ")}
+                      {rotulos[c] ?? c.replace(/_/g, " ")}
                     </th>
                   ))}
                   <th className={tabela.th} />
